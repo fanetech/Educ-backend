@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/fanetech/Educ-backend#readme",
   "dependencies": {
-    "body-parser": "^1.20.0",
+    "bcrypt": "^5.0.1",
     "dotenv": "^16.0.2",
     "express": "^4.18.1",
     "mongoose": "^6.5.4",
