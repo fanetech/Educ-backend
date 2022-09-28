@@ -1,5 +1,6 @@
 const express = require('express');
 const authUser = require("./routes/auth/auth.user")
+const emailRoute = require('./routes/mails/mail.route')
 const bodyParser = require('body-parser')
 
 require('dotenv').config({ path: './config/.env' });
@@ -9,12 +10,14 @@ const app = express();
 const PORT = process.env.PORT ?? 5000;
 const ENPOINT = process.env.ENPOINT
 const ENPOINTAUTH = process.env.ENPOINTAUTH
+const ENPOINMAIL = process.env.ENPOINMAIL
 
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use(`${ENPOINT}${ENPOINTAUTH}/user`, authUser)
+app.use(`${ENPOINT}${ENPOINMAIL}`, emailRoute )
 
 
 app.listen(PORT, () => {
