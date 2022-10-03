@@ -8,7 +8,10 @@ router.get('/:id', schoolController.getOne);
 router.put('/:id', schoolController.update);
 router.delete('/:id', schoolController.remove);
 router.delete('/soft/:id', schoolController.softDelete);
+
+//year and period route
 router.put('/period/:id', schoolController.createYearSchoolPeriod);
 router.patch('/period/update/:id', schoolController.updateYearSchoolPeriod);
+
 
 module.exports = router;
