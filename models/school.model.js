@@ -30,7 +30,9 @@ const schoolSchema = mongoose.Schema({
     schoolYear: {
         type: [
             {
-                year: Date,
+                starYear: Date,
+                endYear: Date,
+                division:String,
                 period: {
                     type: [
                         {

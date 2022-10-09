@@ -9,12 +9,15 @@ router.put('/:id', schoolController.update);
 router.delete('/:id', schoolController.remove);
 router.delete('/soft/:id', schoolController.softDelete);
 
-//year and period route
+//year manager route
+router.put('/year/:id', schoolController.createYearSchool);
 router.put('/period/:id', schoolController.createYearSchoolPeriod);
-router.patch('/period/update/:id', schoolController.updateYearSchoolPeriod);
+router.put('/deadline/:id', schoolController.createYearSchoolDeadline);
+router.patch('/year/update/:id', schoolController.updateYearSchool);
 
-//deadline route
-router.put('/deadline/:id', schoolController.createDeatline);
-router.patch('/deadline/update/:id', schoolController.updateDeatline);
+//school acces role manage route
+router.put('/actor/:id', schoolController.createSchoolActor)
+router.patch('/actor/update/:id', schoolController.updateSchoolActor)
+
 
 module.exports = router;
