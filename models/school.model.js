@@ -31,6 +31,7 @@ const schoolSchema = mongoose.Schema({
         type: [
             {
                 year: Date,
+                division:String,
                 period: {
                     type: [
                         {
