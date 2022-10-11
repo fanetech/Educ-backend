@@ -80,8 +80,9 @@ module.exports.createYearSchool = async (req, res) => {
         req.params.id,
         {
             $push: {
-                schoolYear: {
-                    year: req.body.year,
+                schoolYears: {
+                    starYear: req.body.starYear,
+                    endYear: req.body.endYear,
                     division: req.body.division
                 }
             },
@@ -94,97 +95,71 @@ module.exports.createYearSchool = async (req, res) => {
     )
 }
 
-module.exports.updateYearSchool = (req, res) => {
-    const { starDateP, endDateP, starDateD, endDateD, status, price, year, schoolYearId, periodId, deadlineId } = req.body
+
+
+module.exports.createYearSchoolPeriod = async (req, res) => {
+    const {starDate, endDate, status, schoolYearId} = req.body
+
+    if(!starDate || !endDate || status == null || !schoolYearId)
+        return res.status(400).json({ msg: 'error', err: "Data no complete" })
+
+  schoolModel.findById(
+    req.params.id,
+    (err, docs) =>{
+        if(err) 
+            return res.status(400).json({ msg: 'error', err: "School no found" })
+        const theYear = docs.schoolYears.find(year => year._id.equals(schoolYearId))
+        theYear.periods.push({
+            starDate:starDate,
+            endDate: endDate,
+            status: status
+        })
+
+        docs.save(err => {
+            if (!err) 
+                return res.status(200).json({ msg: 'success', docs });
+            return res.status(500).json({ msg: 'error', err: "Internal error" })
+        })
+    }
+    )
+}
+
+
+module.exports.createYearSchoolDeadline = async (req, res) => {    
+    const {starDate, endDate, price, schoolYearId} = req.body
+
+    if(!starDate || !endDate || !price || !schoolYearId)
+        return res.status(400).json({ msg: 'error', err: "Data no complete" })
 
     schoolModel.findById(
         req.params.id,
-        (err, docs) => {
-            if (err) res.status(201).json({ msg: 'error', err })
-            const _theSchoolYear = docs.schoolYear.find(schoolYear =>
-                schoolYear._id.equals(schoolYearId),
-            );
-
-            if (year) {
-                _theSchoolYear.year = year
-            }
-
-            if (starDateP || endDateP || status !== null) {
-                const thePeriod = _theSchoolYear.period.find(period =>
-                    period._id.equals(periodId),
-                );
-                if (!thePeriod) return res.status(404).send('Comment not found');
-                if (starDateP) thePeriod.starDate = starDateP;
-                if (endDateP) thePeriod.endDate = endDateP;
-                if (status !== null) thePeriod.status = status;
-            }
-
-            if (starDateD || endDateD || price) {
-                const thedeadline = _theSchoolYear.deadline.find(deadline =>
-                    deadline._id.equals(deadlineId),
-                );
-                if (!thedeadline) return res.status(404).send('Comment not found');
-                if (starDateD) thedeadline.starDate = starDateD;
-                if (endDateD) thedeadline.endDate = endDateD;
-                if (price) thedeadline.price = price;
-            }
-
-            return docs.save(err => {
-                if (!err) return res.status(200).json({ msg: 'success', docs });
-                return res.status(201).json({ msg: 'error', err })
-            });
+        (err, docs) =>{
+            if(err) 
+                return res.status(400).json({ msg: 'error', err: "School no found" })
+            const theYear = docs.schoolYears.find(year => year._id.equals(schoolYearId))
+            theYear.deadlines.push({
+                starDate: starDate,
+                endDate: endDate,
+                price: price
         })
 
-}
-
-module.exports.createYearSchoolPeriod = async (req, res) => {
-    schoolModel.findByIdAndUpdate(
-        req.params.id,
-        {
-            $push: {
-                period: {
-                    starDate: req.body.starDate,
-                    endDate: req.body.endDate,
-                    status: req.body.status
-                }
-            },
-        },
-        { new: true },
-        (err, docs) => {
-            if (!err) res.status(200).json({ msg: 'success', docs })
-            else res.status(500).json({ msg: 'error', err })
-        }
+        docs.save(err => {
+            if (!err) 
+                return res.status(200).json({ msg: 'success', docs });
+            return res.status(500).json({ msg: 'error', err: "Internal error" })
+        })
+    }
     )
-}
+} 
 
-module.exports.createYearSchoolDeadline = async (req, res) => {
-    schoolModel.findByIdAndUpdate(
-        req.params.id,
-        {
-            $push: {
-                deadline: {
-                    starDate: req.body.starDate,
-                    endDate: req.body.endDate,
-                    price: req.body.price
-                }
-            },
-        },
-        { new: true },
-        (err, docs) => {
-            if (!err) res.status(200).json({ msg: 'success', docs })
-            else res.status(500).json({ msg: 'error', err })
-        }
-    )
-}
 
-// To manage user role to school
 
 module.exports.createSchoolActor = (req, res) => {
     schoolModel.findByIdAndUpdate(
         req.params.id,
         {
             $push: {
-                actor: {
+                actors: {
                     role: req.body.role,
                     actif: req.body.actif,
                     userId: req.body.userId
@@ -194,33 +169,80 @@ module.exports.createSchoolActor = (req, res) => {
         { new: true },
         (err, docs) => {
             if (!err) res.status(200).json({ msg: 'success', docs })
-            else res.status(201).json({ msg: 'error', err })
+            else res.status(400).json({ msg: 'error', err: "Actor no found" })
         }
     )
 }
 
-module.exports.updateSchoolActor = (req, res) => {
-    if (!req.body) res.status(404).json({ msg: 'error', err: "Aucun donnée n'est envoyer" })
-    const { role, actif, userId, actorId } = req.body
+module.exports.updateYearSchool = (req, res) => {
+    if(Object.keys(req.body).length === 0)
+        return res.status(400).json({ msg: 'error', err: "No data" })
+
+    const { starDateP, endDateP, starDateD, endDateD, status, price, starYear, endYear, schoolYearId, periodId, deadlineId, division, role, actif, userId, actorId } = req.body
+
     schoolModel.findById(
         req.params.id,
         (err, docs) => {
-            if (err) res.status(404).json({ msg: 'error', err })
-            const theActor = docs.actor.find(actor =>
-                actor._id.equals(actorId))
-            if (theActor) {
+            if (err)
+                return res.status(404).json({ msg: 'error', err: "School no found" })
+
+            const _theSchoolYear = docs.schoolYears.find(schoolYear =>
+                schoolYear._id.equals(schoolYearId),
+            );
+
+            if (role || actif != null || userId || actorId){
+                const theActor = docs.actors.find(actor => actor._id.equals(actorId))
+                
+                if(!theActor) 
+                    return res.status(404).json({ msg: 'error', err: "actor no found" })
+                
                 if (role) theActor.role = role;
-                if (actif !== null) theActor.actif = actif;
-                if (userId) theActor.userId = userId;
+                if (actif != null) theActor.actif = actif;
+                if (userId) theActor.userId = userId;                    
             }
-            else
-                res.status(404).json({ msg: 'error', err: 'Actor no trouvé' })
+
+            if(!_theSchoolYear)
+                return res.status(404).json({ msg: 'error', err: "Year no found" })
+
+            if (starYear) {
+                _theSchoolYear.starYear = starYear
+            }
+
+            if (endYear) {
+                _theSchoolYear.endYear = endYear
+            }
+
+
+            if(division){
+                _theSchoolYear.division = division
+            }
+
+            if (starDateP || endDateP || periodId  || status != null) {
+                const thePeriods = _theSchoolYear.periods.find(period =>
+                    period._id.equals(periodId),
+                );
+                if (!thePeriods) return res.status(404).json({ msg: 'error', err: "Period no found" })
+                if (starDateP) thePeriods.starDate = starDateP;
+                if (endDateP) thePeriods.endDate = endDateP;
+                if (status !== null) thePeriods.status = status;
+            }
+
+            if (starDateD || endDateD || price) {
+                const thedeadlines = _theSchoolYear.deadlines.find(deadline =>
+                    deadline._id.equals(deadlineId),
+                );
+                if (!thedeadlines) return res.status(400).json({ msg: 'error', err: "daedline no found" })
+                if (starDateD) thedeadlines.starDate = starDateD;
+                if (endDateD) thedeadlines.endDate = endDateD;
+                if (price) thedeadlines.price = price;
+            }
 
             return docs.save(err => {
-                if (!err) return res.status(200).json({ msg: 'success', docs });
-                return res.status(500).json({ msg: 'error', err })
-            });
+                if (!err) 
+                    return res.status(200).json({ msg: 'success', docs });
 
-        }
-    )
+                return res.status(500).json({ msg: 'error', err: "Internal error" })
+            });
+        })
+
 }

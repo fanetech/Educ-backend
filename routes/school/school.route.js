@@ -17,7 +17,6 @@ router.patch('/year/update/:id', schoolController.updateYearSchool);
 
 //school acces role manage route
 router.put('/actor/:id', schoolController.createSchoolActor)
-router.patch('/actor/update/:id', schoolController.updateSchoolActor)
 
 
 module.exports = router;

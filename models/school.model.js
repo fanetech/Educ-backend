@@ -27,12 +27,13 @@ const schoolSchema = mongoose.Schema({
          type: Boolean,
          default: false 
         },
-    schoolYear: {
+    schoolYears: {
         type: [
             {
-                year: Date,
+                starYear: Date,
+                endYear: Date,
                 division:String,
-                period: {
+                periods: {
                     type: [
                         {
                             starDate: Date,
@@ -42,7 +43,7 @@ const schoolSchema = mongoose.Schema({
 
                     ]
                 },
-                deadline:{
+                deadlines:{
                     type: [
                         {
                             starDate: Date,
@@ -54,7 +55,7 @@ const schoolSchema = mongoose.Schema({
             }
         ]
     },
-    actor: {
+    actors: {
         type: [
             {
                 role: String,
@@ -64,7 +65,7 @@ const schoolSchema = mongoose.Schema({
             }
         ]
     },
-    subscribe: {
+    subscribes: {
         type: [
             {
                 regisDate: Date,
@@ -83,12 +84,12 @@ const schoolSchema = mongoose.Schema({
     class: {
         type: [String]
     },
-    setting: {
-        payment:{
+    settings: {
+        payments:{
             type: [
                 {
                     class: String,
-                    feild: {
+                    feilds: {
                         type: 
                             [
                                 {
