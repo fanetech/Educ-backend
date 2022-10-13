@@ -17,7 +17,7 @@ module.exports.login = async (req, res) => {
 		res.status(200).json({ msg: "success", user: user._id, token: token });
 	} catch (err) {
 		const errors = signInErrors(err);
-		res.status(500).json({ msg: "error", err: " Internal error" });
+		res.status(500).json({ msg: "error", errors });
 	}
 };
 
@@ -37,6 +37,6 @@ module.exports.register = async (req, res) => {
       res.status(200).json({ msg: "success", user: user._id });
     } catch (err) {
       const errors = signUpErrors(err);
-      res.status(500).json({ msg: "error", err:" Internal error" });
+      res.status(500).json({ msg: "error", errors});
     } 
-};
+}; 
