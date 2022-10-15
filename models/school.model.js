@@ -6,10 +6,9 @@ const schoolSchema = mongoose.Schema({
         required: true,
         trim: true        
     },
-    founderName: {
+    founderId: {
         type: String,
-        required: true,
-        trim: true        
+        required: true,       
     },
     schoolEmail: {
         type: String,

@@ -1,23 +1,50 @@
+const { response } = require('express')
 const schoolModel = require('../../models/school.model')
+const userModel = require('../../models/user.model')
+const UserModel = require('../../models/user.model')
 
 module.exports.create = async (req, res) => {
-    const { schoolName, slogan, logo, founderName } = req.body
+    const { schoolName, slogan, founderId } = req.body
+    if(!schoolName || !slogan || !founderId) {
+        return res.status(400).json({ msg: 'error', err: 'data no complete' })
+    }
     let newSchool
 
     newSchool = new schoolModel({
         schoolName,
         slogan,
-        logo,
-        founderName
+        founderId
     })
+    console.log("test")
+    const school = await newSchool.save()
+    if(!school._id) return res.status(500).json({ msg: 'error', err: 'Internal error' })
+  
+    userModel.findByIdAndUpdate(
+        founderId,
+        {
+            $push: {
+                school: {
+                    userId: founderId,
+                    role: 'founder'
+                }
+            },
+        },
+        {new: true},
+        (err, _) =>{
+            if(err) {
+                schoolModel.findByIdAndRemove(school._id, (err, _) => {
+                    if (err) {                        
+                        console.log("error to delete school", err)
+                        return res.status(500).json({ msg: 'error', err: 'Internal error' })
+                    } 
+                    return res.status(404).json({ msg: 'error', err: 'founderId no found' })
+                    
+                })                        
+            }
 
-    try {
-        const school = await newSchool.save()
-        return res.status(200).json({ msg: 'success', school })
-    }
-    catch (err) {
-        return res.status(201).send({ msg: 'error', err })
-    }
+            else return res.status(200).json({ msg: 'success', school })            
+        }
+    )
 }
 
 module.exports.getAll = async (req, res) => {
