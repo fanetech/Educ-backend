@@ -19,9 +19,16 @@ const userSchema = mongoose.Schema(
 			type: String,
 			trim: true,
 		},
-		schoolId: {
-			type: [String],
-		},
+		school:[
+			{
+				userId: String,
+				role: String,
+				status:{
+					type: String,
+					default: true
+				}
+			}
+		],
 		number: {
 			type: String,
 			trim: true,
