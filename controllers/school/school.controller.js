@@ -15,7 +15,6 @@ module.exports.create = async (req, res) => {
         slogan,
         founderId
     })
-    console.log("test")
     const school = await newSchool.save()
     if(!school._id) return res.status(500).json({ msg: 'error', err: 'Internal error' })
   
@@ -101,31 +100,117 @@ module.exports.softDelete = async (req, res) => {
     )
 }
 
-// School period manager
-module.exports.createYearSchoolPeriod = async (req, res) => {
+// To Manage school year
+module.exports.createYearSchool = async (req, res) => {
+    const {starYear, endYear, division } = req.body
+
+    if(!starYear || !endYear || !division ){
+        return res.status(400).json({ msg: 'error', err: 'Data no complete' })
+    }
     schoolModel.findByIdAndUpdate(
         req.params.id,
         {
             $push: {
-                schoolYear: {
-                    year: req.body.year,
-                    period: {
-                        starDate: req.body.starDateP,
-                        endDate: req.body.endDateP,
-                        status: req.body.status
-                    },
-                    deadline: {
-                        starDate: req.body.starDateD,
-                        endDate: req.body.endDateD,
-                        price: req.body.price
-                    }
+                schoolYears: {
+                    starYear: req.body.starYear,
+                    endYear: req.body.endYear,
+                    division: req.body.division
                 }
             },
         },
         { new: true },
+        (err, school) => {
+            if (!err) return res.status(200).json({ msg: 'success', school })
+            else return res.status(500).json({ msg: 'error', err: 'Internal error or school no found' })
+        }
+    )
+}
+
+module.exports.createYearSchoolPeriod = async (req, res) => {
+    const {starDate, endDate, status, schoolYearId} = req.body
+
+    if(!starDate || !endDate || status == null || !schoolYearId){
+        return res.status(400).json({ msg: 'error', err: "Data no complete" })
+    }
+
+  schoolModel.findById(
+    req.params.id,
+    (err, docs) =>{
+        if(err) {
+            return res.status(404).json({ msg: 'error', err: "School no found" })
+        }
+        const theYear = docs.schoolYears.find(year => year._id.equals(schoolYearId))
+        if(!theYear){
+            return res.status(404).json({ msg: 'error', err: "School year no found" })
+        }
+        theYear.periods.push({
+            starDate:starDate,
+            endDate: endDate,
+            status: status
+        })
+
+        docs.save(err => {
+            if (!err) 
+                return res.status(200).json({ msg: 'success', docs });
+            return res.status(500).json({ msg: 'error', err: "Internal error" })
+        })
+    }
+    )
+}
+
+module.exports.createYearSchoolDeadline = async (req, res) => {    
+    const {starDate, endDate, price, schoolYearId} = req.body
+
+    if(!starDate || !endDate || !price || !schoolYearId){
+        return res.status(400).json({ msg: 'error', err: "Data no complete" })
+    }
+
+    schoolModel.findById(
+        req.params.id,
+        (err, docs) =>{
+            if(err) 
+                return res.status(404).json({ msg: 'error', err: "School no found" })
+            const theYear = docs.schoolYears.find(year => year._id.equals(schoolYearId))
+            if(!theYear){
+                return res.status(404).json({ msg: 'error', err: "School year no found" })
+            }
+            theYear.deadlines.push({
+                starDate: starDate,
+                endDate: endDate,
+                price: price
+        })
+
+        docs.save(err => {
+            if (!err) 
+                return res.status(200).json({ msg: 'success', docs });
+            return res.status(500).json({ msg: 'error', err: "Internal error" })
+        })
+    }
+    )
+} 
+
+// Manage school actor
+module.exports.createSchoolActor = (req, res) => {
+    console.log(req.body)
+    const {role, actif, userId} = req.body
+    if(!role || actif == null || !userId){
+        return res.status(400).json({ msg: 'error', err: "Data no complete" })
+    }
+    schoolModel.findByIdAndUpdate(
+        req.params.id,
+        {
+            $push: {
+                actors: {
+                    role: role,
+                    actif: actif,
+                    userId: userId
+                }
+            }
+        },
+        { new: true },
         (err, docs) => {
             if (!err) res.status(200).json({ msg: 'success', docs })
-            else res.status(201).json({ msg: 'error', err })
+            else res.status(500).json({ msg: 'error', err: "Internal error or Actor no found" })
         }
     )
 }

@@ -16,8 +16,7 @@ const schoolSchema = mongoose.Schema({
     },
     slogan: {
         type: String,
-        required: true,
-        trim: true
+        required: true
     },
     logo: {
         type: String
@@ -26,11 +25,13 @@ const schoolSchema = mongoose.Schema({
          type: Boolean,
          default: false 
         },
-    schoolYear: {
+    schoolYears: {
         type: [
             {
-                year: Date,
-                period: {
+                starYear: Date,
+                endYear: Date,
+                division:String,
+                periods: {
                     type: [
                         {
                             starDate: Date,
@@ -40,7 +41,7 @@ const schoolSchema = mongoose.Schema({
 
                     ]
                 },
-                deadline:{
+                deadlines:{
                     type: [
                         {
                             starDate: Date,
@@ -52,7 +53,7 @@ const schoolSchema = mongoose.Schema({
             }
         ]
     },
-    actor: {
+    actors: {
         type: [
             {
                 role: String,
@@ -62,7 +63,7 @@ const schoolSchema = mongoose.Schema({
             }
         ]
     },
-    subscribe: {
+    subscribes: {
         type: [
             {
                 regisDate: Date,
@@ -81,12 +82,12 @@ const schoolSchema = mongoose.Schema({
     class: {
         type: [String]
     },
-    setting: {
+    settings: {
         payment:{
             type: [
                 {
                     class: String,
-                    feild: {
+                    feilds: {
                         type: 
                             [
                                 {
