@@ -2,6 +2,7 @@ const schoolController = require('../../controllers/school/school.controller');
 
 const router = require('express').Router();
 
+// school route
 router.post('/', schoolController.create);
 router.get('/', schoolController.getAll);
 router.get('/:id', schoolController.getOne);
