@@ -29,8 +29,6 @@ app.use(`${ENPOINT}${ENPOINTAUTH}/user`, authUser)
 app.use(`${ENPOINT}${ENPOINTMAIL}`, emailRoute )
 app.use(`${ENPOINT}${ENPOINTSCHOOL}`, schoolRoute )
 
-
-
 app.listen(PORT, () => {
 	console.log(`Listening on port ${PORT}`);
 	console.log(`between ${PORT}${ENPOINT}${ENPOINTSCHOOL}`);

@@ -65,6 +65,7 @@ module.exports.getOne = (req, res) => {
   });
 };
 
+
 module.exports.update = async (req, res) => {
   const id = req.params.id;
   const updateRecord = {
@@ -324,3 +325,8 @@ module.exports.updateSchool = (req, res) => {
     });
   });
 };
+
+//service
+module.exports.getSchoolOfUser = (req, res) =>{
+  //TODO 
+} 
