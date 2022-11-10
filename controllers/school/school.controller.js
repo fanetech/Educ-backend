@@ -52,7 +52,7 @@ module.exports.getAll = async (req, res) => {
   schoolModel
     .find((err, schools) => {
       if (!err) return res.status(200).json({ msg: "success", schools });
-      else return res.status(201).send({ msg: "error", err });
+      else return res.status(500).send({ msg: "error", err });
     })
     .sort({ createdAt: -1 });
 };
@@ -327,6 +327,17 @@ module.exports.updateSchool = (req, res) => {
 };
 
 //service
-module.exports.getSchoolOfUser = (req, res) =>{
-  //TODO 
+module.exports.getSchoolOfUser = async (req, res) =>{
+  if(!req.body.userId){
+    return res.status(400).json({ msg: "error", err: "Data no complete" });
+  }
+  const userSchools = await schoolModel.find(
+    {
+      actors:{$elemMatch:{
+        userId: req.body.userId
+      }
+      }
+    }
+  )
+  return res.status(200).json({ msg: "success", userSchools });
 } 

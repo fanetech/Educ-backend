@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors')
 const authUser = require("./routes/auth/auth.user")
+const user = require("./routes/user/user.route")
 const emailRoute = require('./routes/mails/mail.route')
 const schoolRoute = require('./routes/school/school.route')
 require('dotenv').config({ path: './config/.env' });
@@ -26,6 +27,7 @@ app.use(
   );
 
 app.use(`${ENPOINT}${ENPOINTAUTH}/user`, authUser)
+app.use(`${ENPOINT}/user`, user)
 app.use(`${ENPOINT}${ENPOINTMAIL}`, emailRoute )
 app.use(`${ENPOINT}${ENPOINTSCHOOL}`, schoolRoute )
 

@@ -121,6 +121,12 @@ schoolSchema.pre('find', function() {
   schoolSchema.pre('findById', function() {
     this.where({ isDeleted: false });
   });
+  schoolSchema.pre('findByIdAndUpdate', function() {
+    this.where({ isDeleted: false });
+  });
+  schoolSchema.pre('findByIdAndRemove', function() {
+    this.where({ isDeleted: false });
+  });
 
 
 module.exports = mongoose.model('school', schoolSchema)
