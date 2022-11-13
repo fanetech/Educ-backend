@@ -65,7 +65,6 @@ module.exports.getOne = (req, res) => {
   });
 };
 
-
 module.exports.update = async (req, res) => {
   const id = req.params.id;
   const updateRecord = {
@@ -78,8 +77,8 @@ module.exports.update = async (req, res) => {
     id,
     { $set: updateRecord },
     { new: true },
-    (err, docs) => {
-      if (!err) res.status(200).json({ msg: "success", docs });
+    (err, school) => {
+      if (!err) res.status(200).json({ msg: "success", school });
       else res.status(201).json({ msg: "error", err });
     }
   );
@@ -87,9 +86,12 @@ module.exports.update = async (req, res) => {
 
 module.exports.remove = async (req, res) => {
   const id = req.params.id;
-  schoolModel.findByIdAndRemove(id, (err, docs) => {
-    if (!err) res.status(200).json({ msg: "success", docs });
-    else res.status(201).json({ msg: "error", err });
+  schoolModel.findByIdAndRemove(id, (err, school) => {
+    if (err)
+      return res.status(500).json({ msg: "error", err: "internal error" });
+    if (!school)
+      return res.status(404).json({ msg: "error", err: "school no found" });
+    return res.status(200).json({ msg: "success" });
   });
 };
 
@@ -98,8 +100,8 @@ module.exports.softDelete = async (req, res) => {
     req.params.id,
     { $set: { isDeleted: true } },
     { new: true },
-    (err, docs) => {
-      if (!err) res.status(200).json({ msg: "success", docs });
+    (err, school) => {
+      if (!err) res.status(200).json({ msg: "success" });
       else res.status(201).json({ msg: "error", err });
     }
   );
@@ -327,17 +329,16 @@ module.exports.updateSchool = (req, res) => {
 };
 
 //service
-module.exports.getSchoolOfUser = async (req, res) =>{
-  if(!req.body.userId){
+module.exports.getSchoolOfUser = async (req, res) => {
+  if (!req.body.userId) {
     return res.status(400).json({ msg: "error", err: "Data no complete" });
   }
-  const userSchools = await schoolModel.find(
-    {
-      actors:{$elemMatch:{
-        userId: req.body.userId
-      }
-      }
-    }
-  )
+  const userSchools = await schoolModel.find({
+    actors: {
+      $elemMatch: {
+        userId: req.body.userId,
+      },
+    },
+  });
   return res.status(200).json({ msg: "success", userSchools });
-} 
+};
