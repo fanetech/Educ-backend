@@ -1,7 +1,6 @@
-const { response } = require("express");
 const schoolModel = require("../../models/school.model");
 const userModel = require("../../models/user.model");
-const UserModel = require("../../models/user.model");
+const files = require("../files/files.controller");
 
 module.exports.create = async (req, res) => {
   const { schoolName, slogan, founderId } = req.body;
@@ -341,4 +340,86 @@ module.exports.getSchoolOfUser = async (req, res) => {
     },
   });
   return res.status(200).json({ msg: "success", userSchools });
+};
+
+//libary management
+module.exports.createLibrary = async (req, res) => {
+  const { name } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ msg: "error", err: "Data no complete" });
+  }
+  schoolModel.findById(req.params.id, (err, school) => {
+    if (err)
+      return res.status(500).json({ msg: "error", err: "Internal Error" });
+    if (!school)
+      return res.status(404).json({ msg: "error", err: "School no found" });
+    const library = school.library;
+    library.name = name;
+    school.save((err) => {
+      if (!err) return res.status(200).json({ msg: "success", school });
+      return res.status(500).json({ msg: "error", err: err });
+    });
+  });
+};
+
+module.exports.addDocument = async (req, res) => {
+  const {
+    documentId,
+    size,
+    creatorId,
+    path,
+    categorie,
+    type,
+    name,
+    description,
+  } = req.body;
+
+  const newFile = await files.create(
+    creatorId,
+    path,
+    size,
+    name,
+    type,
+    categorie,
+    description
+  );
+  if (
+    !documentId ||
+    !size ||
+    !creatorId ||
+    !path ||
+    !categorie ||
+    !type ||
+    !name ||
+    !description
+  ) {
+    return res.status(400).json({ msg: "error", err: "Data no complete" });
+  }
+
+  schoolModel.findById(req.params.id, async (err, school) => {
+    if (err) {
+      return res.status(404).json({ msg: "error", err: "School no found" });
+    }
+    const library = school.library;
+    const librarySize = library.size + size;
+    if (librarySize >= 100000000)
+      return res.status(406).json({ msg: "error", err: "Size limit" });
+    library.size = librarySize;
+    library.documentId.push(documentId);
+    const newFile = await files.create(
+      creatorId,
+      path,
+      size,
+      name,
+      type,
+      categorie,
+      description
+    );
+    school.save((err) => {
+      if (!err)
+        return res.status(200).json({ msg: "success", school, file: newFile });
+      return res.status(500).json({ msg: "error", err: "Internal error" });
+    });
+  });
 };
