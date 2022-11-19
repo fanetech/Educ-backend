@@ -1,37 +1,39 @@
-const express = require('express');
-const cors = require('cors')
-const authUser = require("./routes/auth/auth.user")
-const user = require("./routes/user/user.route")
-const emailRoute = require('./routes/mails/mail.route')
-const schoolRoute = require('./routes/school/school.route')
-require('dotenv').config({ path: './config/.env' });
-require('./config/db');
+const express = require("express");
+const cors = require("cors");
+const authUser = require("./routes/auth/auth.user");
+const user = require("./routes/user/user.route");
+const emailRoute = require("./routes/mails/mail.route");
+const schoolRoute = require("./routes/school/school.route");
+const fileRoute = require("./routes/files/files.route");
+require("dotenv").config({ path: "./config/.env" });
+require("./config/db");
 
 const app = express();
 const PORT = process.env.PORT ?? 5000;
-const ENPOINT = process.env.ENPOINT
-const ENPOINTAUTH = process.env.ENPOINTAUTH
-const ENPOINTMAIL = process.env.ENPOINTMAIL
-const ENPOINTSCHOOL = process.env.ENPOINTSCHOOL
-
+const ENPOINT = process.env.ENPOINT;
+const ENPOINTAUTH = process.env.ENPOINTAUTH;
+const ENPOINTMAIL = process.env.ENPOINTMAIL;
+const ENPOINTSCHOOL = process.env.ENPOINTSCHOOL;
+const ENPOINTFILE = process.env.ENPOINTFILE;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(
-	cors({
-	  origin: "*",
-	  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-	  allowedHeaders:
-		"Origin, X-Requested-With, x-access-token, role, Content, Accept, Content-Type, Authorization",
-	})
-  );
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders:
+      "Origin, X-Requested-With, x-access-token, role, Content, Accept, Content-Type, Authorization",
+  })
+);
 
-app.use(`${ENPOINT}${ENPOINTAUTH}/user`, authUser)
-app.use(`${ENPOINT}/user`, user)
-app.use(`${ENPOINT}${ENPOINTMAIL}`, emailRoute )
-app.use(`${ENPOINT}${ENPOINTSCHOOL}`, schoolRoute )
+app.use(`${ENPOINT}${ENPOINTAUTH}/user`, authUser);
+app.use(`${ENPOINT}/user`, user);
+app.use(`${ENPOINT}${ENPOINTMAIL}`, emailRoute);
+app.use(`${ENPOINT}${ENPOINTSCHOOL}`, schoolRoute);
+app.use(`${ENPOINT}${ENPOINTFILE}`, fileRoute);
 
 app.listen(PORT, () => {
-	console.log(`Listening on port ${PORT}`);
-	console.log(`between ${PORT}${ENPOINT}${ENPOINTSCHOOL}`);
+  console.log(`Listening on port ${PORT}`);
+  console.log(`between ${PORT}${ENPOINT}${ENPOINTSCHOOL}`);
 });

@@ -27,6 +27,9 @@ const fileSchema = mongoose.Schema(
       required: true,
     },
     isDeleted: {
+      type: [String],
+    },
+    directoryId: {
       type: Boolean,
       default: false,
     },

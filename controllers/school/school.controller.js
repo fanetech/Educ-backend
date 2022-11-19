@@ -364,36 +364,9 @@ module.exports.createLibrary = async (req, res) => {
 };
 
 module.exports.addDocument = async (req, res) => {
-  const {
-    documentId,
-    size,
-    creatorId,
-    path,
-    categorie,
-    type,
-    name,
-    description,
-  } = req.body;
+  const { size, path, categorie, type, name, description } = req.body;
 
-  const newFile = await files.create(
-    creatorId,
-    path,
-    size,
-    name,
-    type,
-    categorie,
-    description
-  );
-  if (
-    !documentId ||
-    !size ||
-    !creatorId ||
-    !path ||
-    !categorie ||
-    !type ||
-    !name ||
-    !description
-  ) {
+  if (!size || !path || !categorie || !type || !name || !description) {
     return res.status(400).json({ msg: "error", err: "Data no complete" });
   }
 
@@ -405,10 +378,8 @@ module.exports.addDocument = async (req, res) => {
     const librarySize = library.size + size;
     if (librarySize >= 100000000)
       return res.status(406).json({ msg: "error", err: "Size limit" });
-    library.size = librarySize;
-    library.documentId.push(documentId);
-    const newFile = await files.create(
-      creatorId,
+    const newFile = await files.createFile(
+      req.params.id,
       path,
       size,
       name,
@@ -416,6 +387,11 @@ module.exports.addDocument = async (req, res) => {
       categorie,
       description
     );
+    if (newFile.msg === "error") {
+      return res.status(500).json({ msg: "error", err: "Internal error" });
+    }
+    library.size = librarySize;
+    library.documentId.push(newFile._id);
     school.save((err) => {
       if (!err)
         return res.status(200).json({ msg: "success", school, file: newFile });
