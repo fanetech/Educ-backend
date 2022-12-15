@@ -32,7 +32,8 @@ module.exports.getAllUser = (req, res) => {
 };
 
 module.exports.updateUser = (req, res) => {
-  if (!ObjectId.isValid(req.params.id)) {
+  const id = req?.params?.id;
+  if (!ObjectId.isValid(id)) {
     return res.status(404).json({ msg: "error", err: "User no found" });
   }
 
@@ -51,7 +52,6 @@ module.exports.updateUser = (req, res) => {
     adress,
     schoolId,
   } = req.body;
-  const id = req.params.id;
   userModel.findById(id, (err, user) => {
     if (!user) {
       return res.status(404).json({ msg: "error", err: "User no found" });
@@ -87,7 +87,7 @@ module.exports.updateUser = (req, res) => {
       if (!err) {
         return res.status(200).json({ msg: "success", user });
       }
-      console.log(err);
+      console.log("user.Controller error == ",err);
       return res.status(500).json({ msg: "error", err: "Internal error" });
     });
   });
