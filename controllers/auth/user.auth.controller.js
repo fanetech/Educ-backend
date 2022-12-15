@@ -25,17 +25,15 @@ module.exports.login = async (req, res) => {
 };
 
 module.exports.register = async (req, res) => {
-    const { userName, firstName, lastName, number, email, role, password, adress } = req.body;
+  const { number, email, password } = req.body;
+  if ((!number || !email) && !password) {
+    return res.status(400).json({ msg: "error", err: "data no complete" });
+  }
     try {
       const user = await userModel.create({
-        userName,
-        firstName,
-        lastName,
         number,
         email,
-        role,
         password,
-        adress,
       });
       res.status(200).json({ msg: "success", user: user });
     } catch (err) {
