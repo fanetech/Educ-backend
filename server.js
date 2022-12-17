@@ -4,7 +4,7 @@ const authUser = require("./routes/auth/auth.user");
 const user = require("./routes/user/user.route");
 const emailRoute = require("./routes/mails/mail.route");
 const schoolRoute = require("./routes/school/school.route");
-const fileRoute = require("./routes/files/files.route");
+const directoryRoute = require("./routes/files/directory.route");
 require("dotenv").config({ path: "./config/.env" });
 require("./config/db");
 
@@ -14,7 +14,7 @@ const ENPOINT = process.env.ENPOINT;
 const ENPOINTAUTH = process.env.ENPOINTAUTH;
 const ENPOINTMAIL = process.env.ENPOINTMAIL;
 const ENPOINTSCHOOL = process.env.ENPOINTSCHOOL;
-const ENPOINTFILE = process.env.ENPOINTFILE;
+const ENPOINT_DIRACTORUY = process.env.ENPOINT_DIRACTORUY;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -31,7 +31,7 @@ app.use(`${ENPOINT}${ENPOINTAUTH}/user`, authUser);
 app.use(`${ENPOINT}/user`, user);
 app.use(`${ENPOINT}${ENPOINTMAIL}`, emailRoute);
 app.use(`${ENPOINT}${ENPOINTSCHOOL}`, schoolRoute);
-app.use(`${ENPOINT}${ENPOINTFILE}`, fileRoute);
+app.use(`${ENPOINT}${ENPOINT_DIRACTORUY}`, directoryRoute);
 
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);

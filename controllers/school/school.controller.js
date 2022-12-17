@@ -1,6 +1,5 @@
 const schoolModel = require("../../models/school.model");
 const userModel = require("../../models/user.model");
-const files = require("../files/files.controller");
 
 module.exports.create = async (req, res) => {
   const { schoolName, slogan, founderId } = req.body;
@@ -363,39 +362,39 @@ module.exports.createLibrary = async (req, res) => {
   });
 };
 
-module.exports.addDocument = async (req, res) => {
-  const { size, path, categorie, type, name, description } = req.body;
+// module.exports.addDocument = async (req, res) => {
+//   const { size, path, categorie, type, name, description } = req.body;
 
-  if (!size || !path || !categorie || !type || !name || !description) {
-    return res.status(400).json({ msg: "error", err: "Data no complete" });
-  }
+//   if (!size || !path || !categorie || !type || !name || !description) {
+//     return res.status(400).json({ msg: "error", err: "Data no complete" });
+//   }
 
-  schoolModel.findById(req.params.id, async (err, school) => {
-    if (err) {
-      return res.status(404).json({ msg: "error", err: "School no found" });
-    }
-    const library = school.library;
-    const librarySize = library.size + size;
-    if (librarySize >= 100000000)
-      return res.status(406).json({ msg: "error", err: "Size limit" });
-    const newFile = await files.createFile(
-      req.params.id,
-      path,
-      size,
-      name,
-      type,
-      categorie,
-      description
-    );
-    if (newFile.msg === "error") {
-      return res.status(500).json({ msg: "error", err: "Internal error" });
-    }
-    library.size = librarySize;
-    library.documentId.push(newFile._id);
-    school.save((err) => {
-      if (!err)
-        return res.status(200).json({ msg: "success", school, file: newFile });
-      return res.status(500).json({ msg: "error", err: "Internal error" });
-    });
-  });
-};
+//   schoolModel.findById(req.params.id, async (err, school) => {
+//     if (err) {
+//       return res.status(404).json({ msg: "error", err: "School no found" });
+//     }
+//     const library = school.library;
+//     const librarySize = library.size + size;
+//     if (librarySize >= 100000000)
+//       return res.status(406).json({ msg: "error", err: "Size limit" });
+//     const newFile = await files.createFile(
+//       req.params.id,
+//       path,
+//       size,
+//       name,
+//       type,
+//       categorie,
+//       description
+//     );
+//     if (newFile.msg === "error") {
+//       return res.status(500).json({ msg: "error", err: "Internal error" });
+//     }
+//     library.size = librarySize;
+//     library.documentId.push(newFile._id);
+//     school.save((err) => {
+//       if (!err)
+//         return res.status(200).json({ msg: "success", school, file: newFile });
+//       return res.status(500).json({ msg: "error", err: "Internal error" });
+//     });
+//   });
+// };
