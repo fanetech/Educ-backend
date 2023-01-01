@@ -1,6 +1,4 @@
 const directorySchama = require("../../models/directory.model");
-
-
 module.exports.createDirectory = async (directory) => {
   let res = { send: null, status: null };
   if (Object.keys(directory).length === 0) {
