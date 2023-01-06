@@ -1,5 +1,6 @@
 const schoolModel = require("../../models/school.model");
 const userModel = require("../../models/user.model");
+const { createDirectory } = require("../files/directory.service");
 
 module.exports.create = async (req, res) => {
   const { schoolName, slogan, founderId } = req.body;
@@ -343,21 +344,40 @@ module.exports.getSchoolOfUser = async (req, res) => {
 
 //libary management
 module.exports.createLibrary = async (req, res) => {
-  const { name } = req.body;
+  const {
+    name,
+  } = req.body;
+  const type = 'school'
+  const depth = 0
+  const creatorId = req.params.id;
 
   if (!name) {
     return res.status(400).json({ msg: "error", err: "Data no complete" });
   }
-  schoolModel.findById(req.params.id, (err, school) => {
+  schoolModel.findById(creatorId, async (err, school) => {
     if (err)
       return res.status(500).json({ msg: "error", err: "Internal Error" });
     if (!school)
       return res.status(404).json({ msg: "error", err: "School no found" });
     const library = school.library;
-    library.name = name;
-    school.save((err) => {
-      if (!err) return res.status(200).json({ msg: "success", school });
-      return res.status(500).json({ msg: "error", err: err });
-    });
+    const d = {
+      ...req.body,
+      depth,
+      type,
+      creatorId,
+    };
+    const cd = await createDirectory(d);
+    if (cd?.send?.msg === "success") {
+      library.name = name;
+      library.documentId = cd?.send?.directory?._id;
+      school.save((err) => {
+        if (!err) return res.status(200).json({ msg: "success", school });
+        return res.status(500).json({ msg: "error", err: err });
+      });
+    } else {
+      return res
+        .status(404)
+        .json({ msg: "error", err: "directory create error" });
+    }
   });
 };

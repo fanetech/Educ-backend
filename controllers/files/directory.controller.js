@@ -4,12 +4,7 @@ const { createDirectory, createFile } = require("./directory.service");
 
 module.exports.createDirectory = async (req, res) => {
   const directorySercice = await createDirectory(req.body);
-  return await globalSatuts(res, directorySercice);
-  // directorySchama.findById(req.body.directoryId, (err, racineDir) => {
-  //   console.log(racineDir)
-  //   res.send(racineDir);
-  // });
-  
+  return await globalSatuts(res, directorySercice)  
 };
 
 module.exports.createFile = async (req, res) => {

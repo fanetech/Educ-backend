@@ -105,7 +105,7 @@ const schoolSchema = mongoose.Schema(
         default: 0,
       },
       documentId: {
-        type: [String],
+        type: String,
       },
     },
   },
