@@ -5,11 +5,8 @@ const userSchema = mongoose.Schema(
 	{
 		userName: {
 			type: String,
-			required: true,
 			minLength: 3,
 			maxLength: 55,
-			unique: true,
-			trim: true,
 		},
 		firstName: {
 			type: String,
@@ -32,6 +29,7 @@ const userSchema = mongoose.Schema(
 		number: {
 			type: String,
 			trim: true,
+			unique:true
 		},
 		email: {
 			type: String,
@@ -65,19 +63,5 @@ userSchema.pre("save", async function (next) {
 	this.password = await bcrypt.hash(this.password, salt);
 	next();
   });
-  
-  //play function if login for decode password
-  userSchema.statics.login = async function (email, password) {
-	const user = await this.findOne({ email });
-	if (user) {
-		const auth = await bcrypt.compare(password, user.password);
-		
-		if (auth) {
-		return user;
-	  }
-	  throw Error("incorrect password");
-	}
-	throw Error("incorrect email");
-  };
 
 module.exports = mongoose.model('user', userSchema);
