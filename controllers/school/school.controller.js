@@ -415,5 +415,4 @@ module.exports.createLibraryFile = (req, res) => {
     }
   });
 }
-};
 
