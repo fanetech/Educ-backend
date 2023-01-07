@@ -19,7 +19,7 @@ router.put("/year/deadline/:id", schoolController.createYearSchoolDeadline);
 
 //library route
 router.post("/library/:id", schoolController.createLibrary);
-// router.put("/library/:id", schoolController.addDocument);
+router.put("/library/:id", schoolController.createLibraryFile);
 
 // school actor
 router.put("/actor/:id", schoolController.createSchoolActor);

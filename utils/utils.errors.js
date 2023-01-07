@@ -29,3 +29,19 @@ module.exports.signUpErrors = (err) => {
   
     return errors;
   };
+module.exports.globalSatuts = (res, data) => {
+    switch (data.status) {
+      case 200:
+        return res.status(200).json(data.send);
+      case 500:
+         return res.status(500).json(data.send);
+      case 400:
+         return res.status(400).json(data.send);
+      case 404:
+         return res.status(404).json(data.send);
+    
+      default:
+        break;
+    }
+  
+  };
