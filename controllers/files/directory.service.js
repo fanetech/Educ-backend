@@ -74,7 +74,6 @@ module.exports.createFile = async (file, directoryId) => {
     res.status = 400;
     return res;
   }
-  console.log("directory");
   const directory = await directorySchama.findById(directoryId);
   if (!directory) {
     res.send = { msg: "error", err: "Directory no found" };

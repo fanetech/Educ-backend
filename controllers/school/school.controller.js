@@ -1,6 +1,6 @@
 const schoolModel = require("../../models/school.model");
 const userModel = require("../../models/user.model");
-const { createDirectory } = require("../files/directory.service");
+const { createDirectory, createFile } = require("../files/directory.service");
 
 module.exports.create = async (req, res) => {
   const { schoolName, slogan, founderId } = req.body;
@@ -344,6 +344,9 @@ module.exports.getSchoolOfUser = async (req, res) => {
 
 //libary management
 module.exports.createLibrary = async (req, res) => {
+   if (Object.keys(req.body).length === 0)
+     return res.status(400).json({ msg: "error", err: "No data" });
+  // TODO control required variable 
   const {
     name,
   } = req.body;
@@ -371,13 +374,43 @@ module.exports.createLibrary = async (req, res) => {
       library.name = name;
       library.documentId = cd?.send?.directory?._id;
       school.save((err) => {
-        if (!err) return res.status(200).json({ msg: "success", school });
+        if (!err) return res
+          .status(200)
+          .json({ msg: "success", school, directory: cd?.send?.directory });
         return res.status(500).json({ msg: "error", err: err });
       });
     } else {
       return res
         .status(404)
-        .json({ msg: "error", err: "directory create error" });
+        .json({ msg: "error", err: "directory create error",   });
     }
   });
 };
+
+module.exports.createLibraryFile = (req, res) => {
+  schoolModel.findById(req.params.id, async (err, school) => {
+    if (err)
+      return res.status(500).json({ msg: "error", err: "Internal Error" });
+    if (!school)
+      return res.status(404).json({ msg: "error", err: "School no found" });
+    const library = school.library;
+    const newSize = library.size + req?.body?.size;
+    if (newSize > 200000000) {
+      return res.status(406).json({ msg: "error", err: "Capacité de stockage gratuit attient" });
+    }
+    const cd = await createFile(req.body, req?.body?.creatorId);
+    if (cd?.send?.msg === "success") {
+      library.size = newSize;
+      school.save((err) => {
+        if (!err) return res
+          .status(200)
+          .json({ msg: "success", school, directory: cd?.send?.directory });
+        return res.status(500).json({ msg: "error", err });
+      });
+    } else {
+      return res
+        .status(404)
+        .json({ msg: "error", err: "directory create error",  errorDetail: cd?.send?.err });
+    }
+  });
+}
