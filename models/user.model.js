@@ -18,7 +18,7 @@ const userSchema = mongoose.Schema(
 		},
 		school:[
 			{
-				userId: String,
+				schoolId: String,
 				role: String,
 				status:{
 					type: String,
