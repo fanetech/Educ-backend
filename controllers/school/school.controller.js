@@ -14,6 +14,11 @@ module.exports.create = async (req, res) => {
     slogan,
     founderId,
   });
+  newSchool.actors = {
+    role: "founder",
+    actif: true,
+    userId : founderId
+  };
   const school = await newSchool.save();
   if (!school._id)
     return res.status(500).json({ msg: "error", err: "Internal error" });
@@ -23,7 +28,7 @@ module.exports.create = async (req, res) => {
     {
       $push: {
         school: {
-          userId: founderId,
+          schoolId: school._id,
           role: "founder",
         },
       },
