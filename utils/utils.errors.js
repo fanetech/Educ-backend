@@ -19,10 +19,10 @@ module.exports.signUpErrors = (err) => {
   };
   
   module.exports.signInErrors = (err) => {
-    let errors = { email: "", password: "", number: '' };
+    let errors = { password: "", method: "" };
   
-    if (err.message.includes("email")) errors.email = "Email inconnu";
-    if (err.message.includes("number")) errors.number = "Numero inconnu";
+    if (err.message.includes("email") || err.message.includes("number"))
+      errors.method = "Email ou numero inconnu";
   
     if (err.message.includes("password"))
       errors.password = "mot de passe invalide";

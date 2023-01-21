@@ -15,15 +15,17 @@ const createToken = (id) => {
 module.exports.login = async (req, res) => {
   if (Object.keys(req.body).length === 0)
     return res.status(400).json({ msg: "error", err: "No data" });
-  const { email, password, number } = req.body;
+  const { password, method } = req.body;
+  if (!password || !method)
+  return res.status(400).json({ msg: "error", err: "data no complete" });
   try {
     const user = await userModel.findOne({
       $or: [
         {
-          email: email,
+          email: method,
         },
         {
-          number: number,
+          number: method,
         },
       ],
     })
