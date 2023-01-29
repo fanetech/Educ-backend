@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { isEmail } = require("validator");
+const { BOOL } = require("../services/constant");
 const schoolSchema = mongoose.Schema(
   {
     schoolName: {
@@ -25,6 +26,10 @@ const schoolSchema = mongoose.Schema(
     isDeleted: {
       type: Boolean,
       default: false,
+      enum: {
+        values: BOOL,
+        message: "{VALUE} Non supporter",
+      },
     },
     schoolYears: {
       type: [
@@ -76,8 +81,15 @@ const schoolSchema = mongoose.Schema(
         },
       ],
     },
-    class: {
-      type: [String],
+    dynamic: {
+      type: [
+        {
+          year: Date,
+          classroum: {
+            type: [String],
+          },
+        },
+      ],
     },
     settings: {
       payment: {
