@@ -17,7 +17,7 @@ module.exports.create = async (req, res) => {
   newSchool.actors = {
     role: "founder",
     actif: true,
-    userId : founderId
+    userId: founderId,
   };
   const school = await newSchool.save();
   if (!school._id)
@@ -349,14 +349,12 @@ module.exports.getSchoolOfUser = async (req, res) => {
 
 //libary management
 module.exports.createLibrary = async (req, res) => {
-   if (Object.keys(req.body).length === 0)
-     return res.status(400).json({ msg: "error", err: "No data" });
-  // TODO control required variable 
-  const {
-    name,
-  } = req.body;
-  const type = 'school'
-  const depth = 0
+  if (Object.keys(req.body).length === 0)
+    return res.status(400).json({ msg: "error", err: "No data" });
+  // TODO control required variable
+  const { name } = req.body;
+  const type = "school";
+  const depth = 0;
   const creatorId = req.params.id;
 
   if (!name) {
@@ -379,18 +377,18 @@ module.exports.createLibrary = async (req, res) => {
       library.name = name;
       library.documentId = cd?.send?.directory?._id;
       school.save((err) => {
-        if (!err) return res
-          .status(200)
-          .json({ msg: "success", school, directory: cd?.send?.directory });
+        if (!err)
+          return res
+            .status(200)
+            .json({ msg: "success", school, directory: cd?.send?.directory });
         return res.status(500).json({ msg: "error", err: err });
       });
     } else {
       return res
         .status(404)
-        .json({ msg: "error", err: "directory create error",   });
+        .json({ msg: "error", err: "directory create error" });
     }
   });
-
 };
 
 module.exports.createLibraryFile = (req, res) => {
@@ -402,22 +400,48 @@ module.exports.createLibraryFile = (req, res) => {
     const library = school.library;
     const newSize = library.size + req?.body?.size;
     if (newSize > 200000000) {
-      return res.status(406).json({ msg: "error", err: "Capacité de stockage gratuit attient" });
+      return res
+        .status(406)
+        .json({ msg: "error", err: "Capacité de stockage gratuit attient" });
     }
     const cd = await createFile(req.body, req?.body?.creatorId);
     if (cd?.send?.msg === "success") {
       library.size = newSize;
       school.save((err) => {
-        if (!err) return res
-          .status(200)
-          .json({ msg: "success", school, directory: cd?.send?.directory });
+        if (!err)
+          return res
+            .status(200)
+            .json({ msg: "success", school, directory: cd?.send?.directory });
         return res.status(500).json({ msg: "error", err });
       });
     } else {
-      return res
-        .status(404)
-        .json({ msg: "error", err: "directory create error",  errorDetail: cd?.send?.err });
+      return res.status(404).json({
+        msg: "error",
+        err: "directory create error",
+        errorDetail: cd?.send?.err,
+      });
     }
   });
-}
+};
 
+//create year
+module.exports.createYear = (req, res) => {
+  schoolModel.findByIdAndUpdate(
+    req.params.id,
+    {
+      $push: {
+        dynamic: {
+          year: req.body.date,
+        },
+      },
+    },
+    { new: true },
+    (err, school) => {
+      if (!err) return res.status(200).json({ msg: "success", school });
+      else
+        return res
+          .status(500)
+          .json({ msg: "error", err: "Internal error or school no found" });
+    }
+  );
+};

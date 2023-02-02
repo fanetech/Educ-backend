@@ -14,6 +14,7 @@ router.patch("/update/:id", schoolController.updateSchool);
 
 //year route
 router.put("/year/:id", schoolController.createYearSchool);
+router.put("/classroum/:id", schoolController.createYear);
 router.put("/year/period/:id", schoolController.createYearSchoolPeriod);
 router.put("/year/deadline/:id", schoolController.createYearSchoolDeadline);
 
@@ -23,5 +24,7 @@ router.put("/library/:id", schoolController.createLibraryFile);
 
 // school actor
 router.put("/actor/:id", schoolController.createSchoolActor);
+
+//year
 
 module.exports = router;
