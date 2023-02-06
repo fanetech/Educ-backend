@@ -1,6 +1,7 @@
 const schoolModel = require("../../models/school.model");
 const userModel = require("../../models/user.model");
 const { createDirectory, createFile } = require("../files/directory.service");
+const { parseDate } = require("./school.services");
 
 module.exports.create = async (req, res) => {
   const { schoolName, slogan, founderId } = req.body;
@@ -118,11 +119,15 @@ module.exports.createYearSchool = async (req, res) => {
   if (!starYear || !endYear || !division) {
     return res.status(400).json({ msg: "error", err: "Data no complete" });
   }
+  const fullYear = `${parseDate(starYear).getFullYear()}-${parseDate(
+    endYear
+  ).getFullYear()}`;  
   schoolModel.findByIdAndUpdate(
     req.params.id,
     {
       $push: {
         schoolYears: {
+          fullYear,
           starYear: req.body.starYear,
           endYear: req.body.endYear,
           division: req.body.division,
@@ -231,6 +236,101 @@ module.exports.createSchoolActor = (req, res) => {
   );
 };
 
+
+//service
+module.exports.getSchoolOfUser = async (req, res) => {
+  if (!req.body.userId) {
+    return res.status(400).json({ msg: "error", err: "Data no complete" });
+  }
+  const userSchools = await schoolModel.find({
+    actors: {
+      $elemMatch: {
+        userId: req.body.userId,
+      },
+    },
+  });
+  return res.status(200).json({ msg: "success", userSchools });
+};
+
+//libary management
+module.exports.createLibrary = async (req, res) => {
+  if (Object.keys(req.body).length === 0)
+    return res.status(400).json({ msg: "error", err: "No data" });
+  // TODO control required variable
+  const { name } = req.body;
+  const type = "school";
+  const depth = 0;
+  const creatorId = req.params.id;
+
+  if (!name) {
+    return res.status(400).json({ msg: "error", err: "Data no complete" });
+  }
+  schoolModel.findById(creatorId, async (err, school) => {
+    if (err)
+      return res.status(500).json({ msg: "error", err: "Internal Error" });
+    if (!school)
+      return res.status(404).json({ msg: "error", err: "School no found" });
+    const library = school.library;
+    const d = {
+      ...req.body,
+      depth,
+      type,
+      creatorId,
+    };
+    const cd = await createDirectory(d);
+    if (cd?.send?.msg === "success") {
+      library.name = name;
+      library.documentId = cd?.send?.directory?._id;
+      school.save((err) => {
+        if (!err)
+          return res
+            .status(200)
+            .json({ msg: "success", school, directory: cd?.send?.directory });
+        return res.status(500).json({ msg: "error", err: err });
+      });
+    } else {
+      return res
+        .status(404)
+        .json({ msg: "error", err: "directory create error" });
+    }
+  });
+};
+
+module.exports.createLibraryFile = (req, res) => {
+  schoolModel.findById(req.params.id, async (err, school) => {
+    if (err)
+      return res.status(500).json({ msg: "error", err: "Internal Error" });
+    if (!school)
+      return res.status(404).json({ msg: "error", err: "School no found" });
+    const library = school.library;
+    const newSize = library.size + req?.body?.size;
+    if (newSize > 200000000) {
+      return res
+        .status(406)
+        .json({ msg: "error", err: "Capacité de stockage gratuit attient" });
+    }
+    const cd = await createFile(req.body, req?.body?.creatorId);
+    if (cd?.send?.msg === "success") {
+      library.size = newSize;
+      school.save((err) => {
+        if (!err)
+          return res
+            .status(200)
+            .json({ msg: "success", school, directory: cd?.send?.directory });
+        return res.status(500).json({ msg: "error", err });
+      });
+    } else {
+      return res.status(404).json({
+        msg: "error",
+        err: "directory create error",
+        errorDetail: cd?.send?.err,
+      });
+    }
+  });
+};
+
+
+
 //update school object
 module.exports.updateSchool = (req, res) => {
   if (Object.keys(req.body).length === 0)
@@ -330,118 +430,4 @@ module.exports.updateSchool = (req, res) => {
       return res.status(500).json({ msg: "error", err: "Internal error" });
     });
   });
-};
-
-//service
-module.exports.getSchoolOfUser = async (req, res) => {
-  if (!req.body.userId) {
-    return res.status(400).json({ msg: "error", err: "Data no complete" });
-  }
-  const userSchools = await schoolModel.find({
-    actors: {
-      $elemMatch: {
-        userId: req.body.userId,
-      },
-    },
-  });
-  return res.status(200).json({ msg: "success", userSchools });
-};
-
-//libary management
-module.exports.createLibrary = async (req, res) => {
-  if (Object.keys(req.body).length === 0)
-    return res.status(400).json({ msg: "error", err: "No data" });
-  // TODO control required variable
-  const { name } = req.body;
-  const type = "school";
-  const depth = 0;
-  const creatorId = req.params.id;
-
-  if (!name) {
-    return res.status(400).json({ msg: "error", err: "Data no complete" });
-  }
-  schoolModel.findById(creatorId, async (err, school) => {
-    if (err)
-      return res.status(500).json({ msg: "error", err: "Internal Error" });
-    if (!school)
-      return res.status(404).json({ msg: "error", err: "School no found" });
-    const library = school.library;
-    const d = {
-      ...req.body,
-      depth,
-      type,
-      creatorId,
-    };
-    const cd = await createDirectory(d);
-    if (cd?.send?.msg === "success") {
-      library.name = name;
-      library.documentId = cd?.send?.directory?._id;
-      school.save((err) => {
-        if (!err)
-          return res
-            .status(200)
-            .json({ msg: "success", school, directory: cd?.send?.directory });
-        return res.status(500).json({ msg: "error", err: err });
-      });
-    } else {
-      return res
-        .status(404)
-        .json({ msg: "error", err: "directory create error" });
-    }
-  });
-};
-
-module.exports.createLibraryFile = (req, res) => {
-  schoolModel.findById(req.params.id, async (err, school) => {
-    if (err)
-      return res.status(500).json({ msg: "error", err: "Internal Error" });
-    if (!school)
-      return res.status(404).json({ msg: "error", err: "School no found" });
-    const library = school.library;
-    const newSize = library.size + req?.body?.size;
-    if (newSize > 200000000) {
-      return res
-        .status(406)
-        .json({ msg: "error", err: "Capacité de stockage gratuit attient" });
-    }
-    const cd = await createFile(req.body, req?.body?.creatorId);
-    if (cd?.send?.msg === "success") {
-      library.size = newSize;
-      school.save((err) => {
-        if (!err)
-          return res
-            .status(200)
-            .json({ msg: "success", school, directory: cd?.send?.directory });
-        return res.status(500).json({ msg: "error", err });
-      });
-    } else {
-      return res.status(404).json({
-        msg: "error",
-        err: "directory create error",
-        errorDetail: cd?.send?.err,
-      });
-    }
-  });
-};
-
-//create year
-module.exports.createYear = (req, res) => {
-  schoolModel.findByIdAndUpdate(
-    req.params.id,
-    {
-      $push: {
-        dynamic: {
-          year: req.body.date,
-        },
-      },
-    },
-    { new: true },
-    (err, school) => {
-      if (!err) return res.status(200).json({ msg: "success", school });
-      else
-        return res
-          .status(500)
-          .json({ msg: "error", err: "Internal error or school no found" });
-    }
-  );
 };

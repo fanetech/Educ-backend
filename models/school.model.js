@@ -34,6 +34,7 @@ const schoolSchema = mongoose.Schema(
     schoolYears: {
       type: [
         {
+          fullYear: String,
           starYear: Date,
           endYear: Date,
           division: String,
@@ -54,6 +55,9 @@ const schoolSchema = mongoose.Schema(
                 price: Number,
               },
             ],
+          },
+          class: {
+            type: [String],
           },
         },
       ],
@@ -78,16 +82,6 @@ const schoolSchema = mongoose.Schema(
           whatsapp: Number,
           mail: Number,
           library: Number,
-        },
-      ],
-    },
-    dynamic: {
-      type: [
-        {
-          year: Date,
-          classroum: {
-            type: [String],
-          },
         },
       ],
     },
