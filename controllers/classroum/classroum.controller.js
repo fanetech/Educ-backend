@@ -78,3 +78,40 @@ module.exports.matter = async (req, res) => {
       
   })
 }
+module.exports.pupil = async (req, res) => {
+   if (Object.keys(req.body).length === 0)
+    return res.status(400).json({ msg: "error", err: "No data" });
+  
+  const { lastname, firstname, pay, complement, role, birthday, oldSchool, birthCountry } =
+    req.body;
+   if (!lastname || !firstname || !birthday || !birthCountry) {
+     return res.status(400).json({ msg: "error", err: "data no complete" });
+   }
+
+  classModel.findById(req.params.id, (err, classroum) => {
+    if (err)
+      return res.status(500).json({ msg: "error", err: "Internal error" });
+    if (!classroum)
+      return res.status(404).json({ msg: "error", err: "class no found" });
+    const pupil = classroum.pupils; 
+    const p = pay ?? classroum.price;
+    const data = {
+      lastname,
+      firstname,
+      pay: p,
+      complement,
+      role,
+      birthday,
+      oldSchool,
+      birthCountry,
+      createdAt: new Date(),
+    };
+    pupil.push(data);
+    classroum.save((err, c) => {
+      if (err)
+        return res.status(500).json({ msg: "error", err: "Internal error", err });
+      return res.status(200).json({ msg: "success" });
+    })
+      
+  })
+}

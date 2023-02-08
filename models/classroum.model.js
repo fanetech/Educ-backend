@@ -50,10 +50,15 @@ const classroumSchema = mongoose.Schema(
       ],
       required: true,
     },
-    pupil: {
+    pupils: {
       type: [
         {
-          name: String,
+          lastname: String,
+          firstname: String,
+          birthCountry: String,
+          oldSchool: String,
+          createdAt: Date,
+          birthday: Date,
           pay: Number,
           sanction: Number,
           average: Number,
