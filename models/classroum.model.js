@@ -50,7 +50,7 @@ const classroumSchema = mongoose.Schema(
       ],
       required: true,
     },
-    pupils: {
+    pupil: {
       type: [
         {
           lastname: String,
@@ -79,7 +79,7 @@ const classroumSchema = mongoose.Schema(
               message: "{VALUE} Non supporter",
             },
           },
-          note: {
+          notes: {
             type: [
               {
                 matter: String,

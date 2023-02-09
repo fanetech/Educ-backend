@@ -1,6 +1,9 @@
 const { default: mongoose } = require("mongoose");
 const classModel = require("../../models/classroum.model");
 const schoolModel = require("../../models/school.model");
+const classroumService = require("./classroum.service");
+const { globalSatuts } = require("../../utils/utils.errors");
+
 
 module.exports.create = async (req, res) => {
   if (Object.keys(req.body).length === 0)
@@ -53,6 +56,16 @@ module.exports.create = async (req, res) => {
   }
 };
 
+module.exports.getAll = async (req, res) => {
+  const data = await classroumService.getAll();
+  return await globalSatuts(res, data);
+};
+
+module.exports.getOne = async (req, res) => {
+  const data = await classroumService.getOne();
+  return await globalSatuts(res, data);
+};
+
 module.exports.matter = async (req, res) => {
    if (Object.keys(req.body).length === 0)
     return res.status(400).json({ msg: "error", err: "No data" });
@@ -78,6 +91,7 @@ module.exports.matter = async (req, res) => {
       
   })
 }
+
 module.exports.pupil = async (req, res) => {
    if (Object.keys(req.body).length === 0)
     return res.status(400).json({ msg: "error", err: "No data" });
@@ -114,4 +128,17 @@ module.exports.pupil = async (req, res) => {
     })
       
   })
+}
+
+module.exports.note = async (req, res) => {
+   if (Object.keys(req.body).length === 0)
+    return res.status(400).json({ msg: "error", err: "No data" });
+  
+  const { matter, value, matterId } = req.body;
+  const id = req.params.id
+   if ((!matter || !value || !matterId || !id)) {
+     return res.status(400).json({ msg: "error", err: "data no complete" });
+   }
+const data = await classroumService.note(id, { matter, value, matterId });
+ return await globalSatuts(res, data);
 }
