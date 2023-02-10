@@ -50,7 +50,7 @@ const classroumSchema = mongoose.Schema(
       ],
       required: true,
     },
-    pupil: {
+    pupils: {
       type: [
         {
           lastname: String,
