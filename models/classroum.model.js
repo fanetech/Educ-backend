@@ -39,7 +39,7 @@ const classroumSchema = mongoose.Schema(
         },
       ],
     },
-    matter: {
+    matters: {
       type: [
         {
           name: String,

@@ -34,22 +34,45 @@ module.exports.note = async (id, pupilId, data) => {
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
     return { send: { msg: "success", classroum: c }, status: 200 };
   } catch (err) {
+    console.log(err);
     return { send: { msg: "error", err: "Internal error" }, status: 500 };
   }
 };
 
-// module.exports.absence = async (id, data) => {
-//   classModel.findById(id, (err, classroum) => {
-//     if (err)
-//       return { send: { msg: "error", err: "Internal error" }, status: 500 };
-//     if (!classroum)
-//       return { send: { msg: "error", err: "class no found" }, status: 404 };
-//     const note = classroum.notes;
-//     note.push(data);
-//     classroum.save((err, c) => {
-//       if (err)
-//         return { send: { msg: "error", err: "Internal error" }, status: 500 };
-//       return { send: { msg: "success", classroum }, status: 200 };
-//     });
-//   });
-// };
+module.exports.matter = async (id, data) => {
+  try {
+    const classroum = await (await this.getOne(id)).send.classroum;
+    if (classroum.status === "error")
+      return res.status(404).json({ msg: "error", err: "class no found" });
+    classroum.matters.push(data);
+    const c = await classroum.save();
+    if (!c)
+      return { send: { msg: "error", err: "Internal error" }, status: 500 };
+    return { send: { msg: "success", classroum: c }, status: 200 };
+  } catch (err) {
+    console.log(err);
+    return { send: { msg: "error", err: "Internal error" }, status: 500 };
+  }
+};
+
+module.exports.pupil = async (id, data) => {
+  try {
+    const classroum = await (await this.getOne(id)).send.classroum;
+    if (classroum.status === "error")
+      return res.status(404).json({ msg: "error", err: "class no found" });
+    const pupil = classroum.pupils;
+    const p = data.pay ?? classroum.price;
+    const d = {
+      ...data,
+      pay: p,
+    };
+    pupil.push(d);
+    const c = await classroum.save();
+    if (!c)
+      return { send: { msg: "error", err: "Internal error" }, status: 500 };
+    return { send: { msg: "success", classroum: c }, status: 200 };
+  } catch (err) {
+    console.log(err);
+    return { send: { msg: "error", err: "Internal error" }, status: 500 };
+  }
+};
