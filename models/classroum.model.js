@@ -6,15 +6,28 @@ const classroumSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    schoolId: {
+      type: String,
+      required: true,
+    },
     principalId: {
       type: String,
     },
     total: {
       type: Number,
     },
-    price: {
+    totalPrice: {
       type: Number,
       required: true,
+    },
+    deadlines: {
+      type: [
+        {
+          starDate: Date,
+          endDate: Date,
+          price: Number,
+        },
+      ],
     },
     fileId: {
       type: [String],

@@ -3,12 +3,14 @@ const classModel = require("../../models/classroum.model");
 const schoolModel = require("../../models/school.model");
 const classroumService = require("./classroum.service");
 const { globalSatuts } = require("../../utils/utils.errors");
+const { isEmpty } = require("../../utils/utils.tools");
 
 module.exports.create = async (req, res) => {
   if (Object.keys(req.body).length === 0)
     return res.status(400).json({ msg: "error", err: "No data" });
 
   const { name, price, schoolId, schoolYearsId } = req.body;
+  let deadlines = req?.body?.deadlines;
   if (!name || !price || !schoolId || !schoolYearsId) {
     return res.status(400).json({ msg: "error", err: "data no complete" });
   }
@@ -28,10 +30,32 @@ module.exports.create = async (req, res) => {
   try {
     const session = await mongoose.startSession();
     await session.withTransaction(async () => {
+      const schoolDeadlines = schoolYear.deadlines;
+      console.log(isEmpty(deadlines));
+      if (isEmpty(deadlines)) {
+        if (isEmpty(schoolDeadlines)) {
+          return res
+            .status(400)
+            .json({ msg: "error", err: "deadlines no found in school year" });
+        } else {
+          let d = [];
+          for (const sd of schoolDeadlines) {
+            const deadlinesObject = {
+              starDate: sd?.starDate,
+              endDate: sd?.endDate,
+              price: (sd?.price / 100) * price,
+            };
+            d.push(deadlinesObject);
+          }
+          deadlines = d;
+        }
+      }
       const newClassroum = await new classModel(
         {
           name,
-          price,
+          totalPrice: price,
+          schoolId,
+          deadlines,
         },
         { session }
       );
@@ -93,17 +117,17 @@ module.exports.pupil = async (req, res) => {
   if (!lastname || !firstname || !birthday || !birthCountry) {
     return res.status(400).json({ msg: "error", err: "data no complete" });
   }
-   const data = {
-     lastname,
-     firstname,
-     pay: pay,
-     complement,
-     role,
-     birthday,
-     oldSchool,
-     birthCountry,
-     createdAt: new Date(),
-   };
+  const data = {
+    lastname,
+    firstname,
+    pay,
+    complement,
+    role,
+    birthday,
+    oldSchool,
+    birthCountry,
+    createdAt: new Date(),
+  };
   const response = await classroumService.pupil(req.params.id, data);
   return await globalSatuts(res, response);
 };
