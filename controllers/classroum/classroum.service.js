@@ -1,8 +1,8 @@
-const classModel = require("../../models/classroum.model");
+const classroomModel = require("../../models/classroum.model");
 const { isEmpty } = require("../../utils/utils.tools");
 
 module.exports.getAll = async () => {
-  const classroums = await classModel.find().sort({ createdAt: -1 });
+  const classroums = await classroomModel.find().sort({ createdAt: -1 });
   if (classroums) return { send: { msg: "success", classroums }, status: 200 };
   else return { send: { msg: "error", err: "Internal error" }, status: 500 };
 };
@@ -10,7 +10,7 @@ module.exports.getAll = async () => {
 // TODO
 module.exports.getOne = async (id) => {
   try {
-    const classroum = await classModel.findById(id);
+    const classroum = await classroomModel.findById(id);
     if (classroum) return { send: { msg: "success", classroum }, status: 200 };
     else {
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
@@ -23,7 +23,7 @@ module.exports.getOne = async (id) => {
 
 module.exports.note = async (id, pupilId, data) => {
   try {
-    const classroum = await classModel.findById(id);
+    const classroum = await classroomModel.findById(id);
     if (!classroum)
       return { send: { msg: "error", err: "class no found" }, status: 404 };
     const pupil = classroum.pupils.find((p) => p._id.equals(pupilId));

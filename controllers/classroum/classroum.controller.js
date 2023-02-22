@@ -1,5 +1,5 @@
 const { default: mongoose } = require("mongoose");
-const classModel = require("../../models/classroum.model");
+const classroomModel = require("../../models/classroum.model");
 const schoolModel = require("../../models/school.model");
 const classroumService = require("./classroum.service");
 const { globalSatuts } = require("../../utils/utils.errors");
@@ -31,7 +31,6 @@ module.exports.create = async (req, res) => {
     const session = await mongoose.startSession();
     await session.withTransaction(async () => {
       const schoolDeadlines = schoolYear.deadlines;
-      console.log(isEmpty(deadlines));
       if (isEmpty(deadlines)) {
         if (isEmpty(schoolDeadlines)) {
           return res
@@ -50,7 +49,7 @@ module.exports.create = async (req, res) => {
           deadlines = d;
         }
       }
-      const newClassroum = await new classModel(
+      const newClassroum = await new classroomModel(
         {
           name,
           totalPrice: price,
@@ -59,8 +58,9 @@ module.exports.create = async (req, res) => {
         },
         { session }
       );
-
-      schoolYear.class.push(newClassroum._id);
+ if (isEmpty(newClassroum))
+   return res.status(500).json({ msg: "error", err: "Internal error" });
+      schoolYear.classroomIds.push(newClassroum._id);
       await school.save({ session });
       const classroum = await newClassroum.save({ session });
 

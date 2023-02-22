@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { PUPIL_ROLE, BOOL } = require("../services/constant");
-const classroumSchema = mongoose.Schema(
+const classroomSchema = mongoose.Schema(
   {
     name: {
       type: String,
@@ -95,9 +95,16 @@ const classroumSchema = mongoose.Schema(
           notes: {
             type: [
               {
-                matter: String,
-                value: Number,
-                matterId: String,
+                periodId: String,
+                values: {
+                  type: [
+                    {
+                      matter: String,
+                      value: Number,
+                      matterId: String,
+                    }
+                  ]
+                }
               },
             ],
           },
@@ -110,22 +117,22 @@ const classroumSchema = mongoose.Schema(
   }
 );
 
-classroumSchema.pre("find", function () {
+classroomSchema.pre("find", function () {
   this.where({ isDeleted: false });
 });
 
-classroumSchema.pre("findOne", function () {
+classroomSchema.pre("findOne", function () {
   this.where({ isDeleted: false });
 });
 
-classroumSchema.pre("findById", function () {
+classroomSchema.pre("findById", function () {
   this.where({ isDeleted: false });
 });
-classroumSchema.pre("findByIdAndUpdate", function () {
+classroomSchema.pre("findByIdAndUpdate", function () {
   this.where({ isDeleted: false });
 });
-classroumSchema.pre("findByIdAndRemove", function () {
+classroomSchema.pre("findByIdAndRemove", function () {
   this.where({ isDeleted: false });
 });
 
-module.exports = mongoose.model("classroum", classroumSchema);
+module.exports = mongoose.model("classroom", classroomSchema);

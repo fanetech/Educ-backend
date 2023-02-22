@@ -62,12 +62,20 @@ module.exports.getAll = async (req, res) => {
     .sort({ createdAt: -1 });
 };
 
-module.exports.getOne = (req, res) => {
+module.exports.getOne = async (req, res) => {
   const id = req.params.id;
-  schoolModel.findById(id, (err, school) => {
-    if (school) return res.status(200).json({ msg: "success", school });
-    else return res.status(201).json({ msg: "err", err: "no found" });
-  });
+  // const school = await schoolModel
+  //   .findById(id)
+  //   .populate("schoolYears.classroums", "name");
+  // if (school) return res.status(200).json({ msg: "success", school });
+  // return res.status(201).json({ msg: "err", err: "no found", school });
+  schoolModel
+    .findById(id, (err, school) => {
+      if (school) return res.status(200).json({ msg: "success", school });
+      else return res.status(201).json({ msg: "err", err: "no found" });
+    })
+    .populate("schoolYears.classroomIds", "name")
+    .populate("actors.userId", ["userName", "firstName", "lastName"]);
 };
 
 module.exports.update = async (req, res) => {
@@ -116,12 +124,12 @@ module.exports.softDelete = async (req, res) => {
 module.exports.createYearSchool = async (req, res) => {
   const { starYear, endYear, division } = req.body;
 
-  if (!starYear || !endYear || !division) {
+  if (!starYear || !endYear) {
     return res.status(400).json({ msg: "error", err: "Data no complete" });
   }
   const fullYear = `${parseDate(starYear).getFullYear()}-${parseDate(
     endYear
-  ).getFullYear()}`;  
+  ).getFullYear()}`;
   schoolModel.findByIdAndUpdate(
     req.params.id,
     {
@@ -203,7 +211,9 @@ module.exports.createYearSchoolDeadline = async (req, res) => {
 
     docs.save((err) => {
       if (!err) return res.status(200).json({ msg: "success", docs });
-      return res.status(500).json({ msg: "error", err: "Internal error" });
+      return res
+        .status(500)
+        .json({ msg: "error", err: "Internal error", error: err });
     });
   });
 };
@@ -214,28 +224,30 @@ module.exports.createSchoolActor = (req, res) => {
   if (!role || actif == null || !userId) {
     return res.status(400).json({ msg: "error", err: "Data no complete" });
   }
-  schoolModel.findByIdAndUpdate(
-    req.params.id,
-    {
-      $push: {
-        actors: {
-          role: role,
-          actif: actif,
-          userId: userId,
+  schoolModel
+    .findByIdAndUpdate(
+      req.params.id,
+      {
+        $push: {
+          actors: {
+            role: role,
+            actif: actif,
+            userId: userId,
+          },
         },
       },
-    },
-    { new: true },
-    (err, docs) => {
-      if (!err) res.status(200).json({ msg: "success", docs });
-      else
-        res
-          .status(500)
-          .json({ msg: "error", err: "Internal error or Actor no found" });
-    }
-  );
+      { new: true },
+      (err, docs) => {
+        if (!err) res.status(200).json({ msg: "success", docs });
+        else
+          res
+            .status(500)
+            .json({ msg: "error", err: "Internal error or Actor no found" });
+      }
+    )
+    .populate("schoolYears.classroomIds", "name")
+    .populate("actors.userId", ["userName", "firstName", "lastName"]);;
 };
-
 
 //service
 module.exports.getSchoolOfUser = async (req, res) => {
@@ -328,8 +340,6 @@ module.exports.createLibraryFile = (req, res) => {
     }
   });
 };
-
-
 
 //update school object
 module.exports.updateSchool = (req, res) => {
