@@ -24,4 +24,6 @@ router.put("/library/:id", schoolController.createLibraryFile);
 // school actor
 router.put("/actor/:id", schoolController.createSchoolActor);
 
+//year
+
 module.exports = router;

@@ -5,3 +5,6 @@ module.exports.USER_ROLE = {
     student: 'student'
 
 }
+module.exports.PUPIL_ROLE = ["none", "delegate", "adjunct", "board"];
+module.exports.BOOL = [true, false];
+module.exports.DIVISION = ['trimester', 'semester', 'others'];

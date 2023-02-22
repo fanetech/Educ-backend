@@ -1,4 +1,4 @@
-const schoolModel = require("../models/school.model")
+const schoolModel = require("../../models/school.model")
 const response ={
     res: null,
     err: null
@@ -13,4 +13,9 @@ module.exports.remove = async (id) =>{
         }
         return response
     })
+}
+module.exports.parseDate = (date) => {
+    const d = new Date(date)
+    return d
+    
 }

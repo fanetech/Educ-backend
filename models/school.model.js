@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { isEmail } = require("validator");
+const { BOOL, DIVISION } = require("../services/constant");
 const schoolSchema = mongoose.Schema(
   {
     schoolName: {
@@ -25,16 +26,30 @@ const schoolSchema = mongoose.Schema(
     isDeleted: {
       type: Boolean,
       default: false,
+      enum: {
+        values: BOOL,
+        message: "{VALUE} Non supporter. try this ('true', 'false')",
+      },
     },
     schoolYears: {
       type: [
         {
+          fullYear: String,
           starYear: Date,
           endYear: Date,
-          division: String,
+          division: {
+            type: String,
+            default: "other",
+            // enum: {
+            //   values: DIVISION,
+            //   message:"{VALUE} Non supporter. try this ('trimester', 'semester', 'others')",
+            // },
+          },
           periods: {
             type: [
               {
+                fullPeriod: String,
+                name: String,
                 starDate: Date,
                 endDate: Date,
                 status: Boolean,
@@ -50,6 +65,9 @@ const schoolSchema = mongoose.Schema(
               },
             ],
           },
+          classroomIds: {
+            type: [{ type: mongoose.Schema.Types.ObjectId, ref: "classroom" }],
+          },
         },
       ],
     },
@@ -58,7 +76,7 @@ const schoolSchema = mongoose.Schema(
         {
           role: String,
           actif: Boolean,
-          userId: String,
+          userId: { type: String, ref: "user" },
         },
       ],
     },
@@ -75,9 +93,6 @@ const schoolSchema = mongoose.Schema(
           library: Number,
         },
       ],
-    },
-    class: {
-      type: [String],
     },
     settings: {
       payment: {
