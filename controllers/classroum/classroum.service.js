@@ -1,5 +1,6 @@
 const classroomModel = require("../../models/classroum.model");
 const { isEmpty } = require("../../utils/utils.tools");
+const schoolModel = require("../../models/school.model");
 
 module.exports.getAll = async () => {
   const classroums = await classroomModel.find().sort({ createdAt: -1 });
@@ -10,7 +11,12 @@ module.exports.getAll = async () => {
 // TODO
 module.exports.getOne = async (id) => {
   try {
-    const classroum = await classroomModel.findById(id);
+    const classroum = await classroomModel
+      .findById(id)
+      // .populate("pupils.notes.values.matterId", [
+      //   "name",
+      //   "coef",
+      // ]);
     if (classroum) return { send: { msg: "success", classroum }, status: 200 };
     else {
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
@@ -61,23 +67,42 @@ module.exports.pupil = async (id, data) => {
     const classroum = await (await this.getOne(id)).send.classroum;
     if (classroum.status === "error")
       return { send: { msg: "error", err: "class no found" }, status: 404 };
+
     const matters = classroum?.matters;
     if (isEmpty(matters))
       return { send: { msg: "error", err: "Matter is null" }, status: 404 };
+
+    const school = await schoolModel.findById(classroum.schoolId);
+    const currentSchoolYear = getCurrentObject(school.schoolYears);
+    const periods = currentSchoolYear.periods;
+    if (isEmpty(periods))
+      return { send: { msg: "error", err: "Period is null" }, status: 404 };
+    // console.log(classroum);
+
     let pupilMatter = [];
     for (const m of matters) {
       const matterObject = {
-        matter: m?.name,
         matterId: m?._id,
       };
       pupilMatter.push(matterObject);
     }
+console.log(pupilMatter);
+    let notesPeriod = [];
+    for (const p of periods) {
+      const periodObject = {
+        periodId: p._id,
+        values: pupilMatter,
+      };
+      notesPeriod.push(periodObject);
+    }
+
+    console.log(notesPeriod);
     const pupil = classroum.pupils;
     const p = data?.pay ?? classroum.totalPrice;
     const d = {
       ...data,
       pay: p,
-      notes: pupilMatter,
+      notes: notesPeriod,
     };
     pupil.push(d);
     const c = await classroum.save();
@@ -88,4 +113,10 @@ module.exports.pupil = async (id, data) => {
     console.log(err);
     return { send: { msg: "error", err: "Internal error" }, status: 500 };
   }
+};
+
+const getCurrentObject = (array) => {
+  if (isEmpty(array))
+    return { send: { msg: "error", err: "schoolYear is null" }, status: 404 };
+  return array[array.length - 1];
 };

@@ -64,11 +64,6 @@ module.exports.getAll = async (req, res) => {
 
 module.exports.getOne = async (req, res) => {
   const id = req.params.id;
-  // const school = await schoolModel
-  //   .findById(id)
-  //   .populate("schoolYears.classroums", "name");
-  // if (school) return res.status(200).json({ msg: "success", school });
-  // return res.status(201).json({ msg: "err", err: "no found", school });
   schoolModel
     .findById(id, (err, school) => {
       if (school) return res.status(200).json({ msg: "success", school });

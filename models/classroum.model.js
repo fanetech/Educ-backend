@@ -99,12 +99,12 @@ const classroomSchema = mongoose.Schema(
                 values: {
                   type: [
                     {
-                      matter: String,
                       value: Number,
                       matterId: String,
-                    }
-                  ]
-                }
+                      // matterId: { type: String, ref: "classroom" },
+                    },
+                  ],
+                },
               },
             ],
           },

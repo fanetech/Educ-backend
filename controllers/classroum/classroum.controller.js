@@ -18,7 +18,7 @@ module.exports.create = async (req, res) => {
   let schoolYear, school;
 
   try {
-    school = await schoolModel.findById(schoolId);
+    school = await schoolModel.findById(schoolId); //TODO create service to school
     schoolYear = school.schoolYears.find((d) => d._id.equals(schoolYearsId));
   } catch (err) {
     return res.status(400).json({ msg: "error", err: "school no found" });
