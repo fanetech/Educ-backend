@@ -69,7 +69,7 @@ module.exports.getOne = async (req, res) => {
       if (school) return res.status(200).json({ msg: "success", school });
       else return res.status(201).json({ msg: "err", err: "no found" });
     })
-    .populate("schoolYears.classroomIds", "name")
+    .populate("schoolYears.classroomIds")
     .populate("actors.userId", ["userName", "firstName", "lastName"]);
 };
 

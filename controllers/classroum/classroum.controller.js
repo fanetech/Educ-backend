@@ -4,6 +4,7 @@ const schoolModel = require("../../models/school.model");
 const classroumService = require("./classroum.service");
 const { globalSatuts } = require("../../utils/utils.errors");
 const { isEmpty } = require("../../utils/utils.tools");
+const connectDB = require("../../config/db");
 
 module.exports.create = async (req, res) => {
   if (Object.keys(req.body).length === 0)
@@ -11,7 +12,7 @@ module.exports.create = async (req, res) => {
 
   const { name, price, schoolId, schoolYearsId } = req.body;
   let deadlines = req?.body?.deadlines;
-  if (!name || !price || !schoolId || !schoolYearsId) {
+  if (!name || !price || !schoolId ) {
     return res.status(400).json({ msg: "error", err: "data no complete" });
   }
 
@@ -29,7 +30,7 @@ module.exports.create = async (req, res) => {
 
   try {
     const session = await mongoose.startSession();
-    await session.withTransaction(async () => {
+    await session.withTransaction(async (session) => {
       const schoolDeadlines = schoolYear.deadlines;
       if (isEmpty(deadlines)) {
         if (isEmpty(schoolDeadlines)) {
@@ -49,17 +50,17 @@ module.exports.create = async (req, res) => {
           deadlines = d;
         }
       }
-      const newClassroum = await new classroomModel(
-        {
-          name,
-          totalPrice: price,
-          schoolId,
-          deadlines,
-        },
-        { session }
+      const newClassroum = await classroomModel.create(
+        
+          {
+            name,
+            totalPrice: price,
+            schoolId,
+            deadlines,
+          },        
       );
- if (isEmpty(newClassroum))
-   return res.status(500).json({ msg: "error", err: "Internal error" });
+      if (isEmpty(newClassroum))
+        return res.status(500).json({ msg: "error", err: "Internal error" });
       schoolYear.classroomIds.push(newClassroum._id);
       await school.save({ session });
       const classroum = await newClassroum.save({ session });
@@ -136,15 +137,14 @@ module.exports.note = async (req, res) => {
   if (Object.keys(req.body).length === 0)
     return res.status(400).json({ msg: "error", err: "No data" });
 
-  const { matter, value, matterId, pupilId } = req.body;
+  const { matter, value, matterId, pupilId, periodId } = req.body;
   const id = req.params.id;
-  if (!matter || !value || !matterId || !id || !pupilId) {
+  if (!value || !matterId || !id || !pupilId || !periodId) {
     return res.status(400).json({ msg: "error", err: "data no complete" });
   }
-  const data = await classroumService.note(id, pupilId, {
-    matter,
+  const data = await classroumService.note(id, pupilId, periodId, {
     value,
-    matterId,
+    matterId
   });
   return await globalSatuts(res, data);
 };

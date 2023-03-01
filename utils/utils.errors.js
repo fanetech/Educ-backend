@@ -44,4 +44,16 @@ module.exports.globalSatuts = (res, data) => {
         break;
     }
   
+};
+  
+  module.exports.classroomError = (err) => {
+    let errors = { totalPrice: "", schoolId: "", name: "" };
+
+    if (err.message.includes("name"))
+      errors.name = "Nom incorrect ou Existe déja";
+
+    if (err.code === 11000 && Object.keys(err.keyValue)[0].includes("name"))
+      errors.number = "Nom incorrect ou Existe déja";
+
+    return errors;
   };

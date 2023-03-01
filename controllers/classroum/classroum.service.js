@@ -19,7 +19,7 @@ module.exports.getOne = async (id) => {
       // ]);
     if (classroum) return { send: { msg: "success", classroum }, status: 200 };
     else {
-      return { send: { msg: "error", err: "Internal error" }, status: 500 };
+      return { send: { msg: "error", err: "Internal error" }, status: 404 };
     }
   } catch (err) {
     console.log(err);
@@ -27,7 +27,7 @@ module.exports.getOne = async (id) => {
   }
 };
 
-module.exports.note = async (id, pupilId, data) => {
+module.exports.note = async (id, pupilId, periodId, data) => {
   try {
     const classroum = await classroomModel.findById(id);
     if (!classroum)
@@ -35,7 +35,14 @@ module.exports.note = async (id, pupilId, data) => {
     const pupil = classroum.pupils.find((p) => p._id.equals(pupilId));
     if (!pupil)
       return { send: { msg: "error", err: "pupil no found" }, status: 404 };
-    pupil.notes.push(data);
+
+    const note = pupil.notes.find((p) => p.periodId === periodId);
+    if (!note)
+      return { send: { msg: "error", err: "period no found" }, status: 404 };
+    const value = note.values.find((p) => p.matterId === data.matterId);
+    if (value)
+      return { send: { msg: "error", err: "matter existe" }, status: 404 };
+    note.values.push(data);
     const c = await classroum.save();
     if (!c)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
@@ -84,7 +91,7 @@ module.exports.pupil = async (id, data) => {
       const matterObject = {
         matterId: m?._id,
       };
-      pupilMatter.push(matterObject);
+      notesPeriod.push(periodObject);
     }
 console.log(pupilMatter);
     let notesPeriod = [];
