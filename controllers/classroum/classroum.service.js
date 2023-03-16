@@ -84,16 +84,6 @@ module.exports.pupil = async (id, data) => {
     const periods = currentSchoolYear.periods;
     if (isEmpty(periods))
       return { send: { msg: "error", err: "Period is null" }, status: 404 };
-    // console.log(classroum);
-
-    let pupilMatter = [];
-    for (const m of matters) {
-      const matterObject = {
-        matterId: m?._id,
-      };
-      notesPeriod.push(periodObject);
-    }
-console.log(pupilMatter);
     let notesPeriod = [];
     for (const p of periods) {
       const periodObject = {
@@ -102,8 +92,7 @@ console.log(pupilMatter);
       };
       notesPeriod.push(periodObject);
     }
-
-    console.log(notesPeriod);
+    
     const pupil = classroum.pupils;
     const p = data?.pay ?? classroum.totalPrice;
     const d = {
@@ -127,3 +116,25 @@ const getCurrentObject = (array) => {
     return { send: { msg: "error", err: "schoolYear is null" }, status: 404 };
   return array[array.length - 1];
 };
+
+module.exports.update = async (id, data) => {
+  try {
+    const classroom = await (await this.getOne(id)).send.classroum;
+    if (classroom.status === "error")
+    return { send: { msg: "error", err: "class no found" }, status: 404 };
+
+    if(data?.name)
+      classroom.name = data.name
+    if(data?.principalId)
+      classroom.principalId = data.principalId
+
+      const c = await classroom.save();
+      if (!c)
+        return { send: { msg: "error", err: "Internal error" }, status: 500 };
+      return { send: { msg: "success", classroom: c }, status: 200 };
+    
+  } catch (error) {
+    console.log(error);
+    return { send: { msg: "error", err: "Internal error" }, status: 500 };
+  }
+}

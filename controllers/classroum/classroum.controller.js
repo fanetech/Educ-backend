@@ -148,3 +148,12 @@ module.exports.note = async (req, res) => {
   });
   return await globalSatuts(res, data);
 };
+
+
+module.exports.update = async (req, res) => {
+  if (Object.keys(req.body).length === 0)
+    return res.status(400).json({ msg: "error", err: "No data" });
+
+  const data = await classroumService.update(req.params.id, req.body)
+  return await globalSatuts(res, data);
+}
