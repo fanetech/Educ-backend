@@ -41,8 +41,7 @@ module.exports.create = async (req, res) => {
           let d = [];
           for (const sd of schoolDeadlines) {
             const deadlinesObject = {
-              starDate: sd?.starDate,
-              endDate: sd?.endDate,
+              periodId: sd?._id,
               price: (sd?.price / 100) * price,
             };
             d.push(deadlinesObject);
@@ -137,12 +136,12 @@ module.exports.note = async (req, res) => {
   if (Object.keys(req.body).length === 0)
     return res.status(400).json({ msg: "error", err: "No data" });
 
-  const { matter, value, matterId, pupilId, periodId } = req.body;
+  const { value, matterId, pupilId, noteByPeriodId } = req.body;
   const id = req.params.id;
-  if (!value || !matterId || !id || !pupilId || !periodId) {
+  if (!value || !id || !pupilId || !noteByPeriodId || !matterId) {
     return res.status(400).json({ msg: "error", err: "data no complete" });
   }
-  const data = await classroumService.note(id, pupilId, periodId, {
+  const data = await classroumService.note(id, pupilId, noteByPeriodId, {
     value,
     matterId
   });
@@ -156,4 +155,12 @@ module.exports.update = async (req, res) => {
 
   const data = await classroumService.update(req.params.id, req.body)
   return await globalSatuts(res, data);
+}
+
+module.exports.updatePupil = async (req, res) => {
+  if (Object.keys(req.body).length === 0)
+  return res.status(400).json({ msg: "error", err: "No data" });
+
+const data = await classroumService.updatePupil(req.params.id, req.body)
+return await globalSatuts(res, data);
 }

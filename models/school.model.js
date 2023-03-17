@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { isEmail } = require("validator");
-const { BOOL, DIVISION } = require("../services/constant");
+const { BOOL, DIVISION, ACTORS_ROLE } = require("../services/constant");
 const schoolSchema = mongoose.Schema(
   {
     schoolName: {
@@ -74,7 +74,13 @@ const schoolSchema = mongoose.Schema(
     actors: {
       type: [
         {
-          role: String,
+          role: {
+            type: String,
+            enum: {
+              values: ACTORS_ROLE,
+              message: "{VALUE} Non supporter",
+            },
+          },
           actif: Boolean,
           userId: { type: String, ref: "user" },
         },

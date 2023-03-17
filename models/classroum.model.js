@@ -14,8 +14,9 @@ const classroomSchema = mongoose.Schema(
     principalId: {
       type: String,
     },
-    total: {
+    totalPupil: {
       type: Number,
+      default: 0
     },
     totalPrice: {
       type: Number,
@@ -24,8 +25,7 @@ const classroomSchema = mongoose.Schema(
     deadlines: {
       type: [
         {
-          starDate: Date,
-          endDate: Date,
+          periodId: String,
           price: Number,
         },
       ],
@@ -93,16 +93,17 @@ const classroomSchema = mongoose.Schema(
               message: "{VALUE} Non supporter",
             },
           },
-          notes: {
+          notesByPeriod: {
             type: [
               {
                 periodId: String,
-                values: {
+                notes: {
                   type: [
                     {
                       value: Number,
-                      matterId: String,
-                      // matterId: { type: String, ref: "classroom" },
+                      matterId: {
+                        type: String,
+                      }
                     },
                   ],
                 },
