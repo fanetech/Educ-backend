@@ -4,6 +4,7 @@ const schoolModel = require("../../models/school.model");
 const classroumService = require("./classroum.service");
 const { globalSatuts } = require("../../utils/utils.errors");
 const { isEmpty } = require("../../utils/utils.tools");
+const connectDB = require("../../config/db");
 
 module.exports.create = async (req, res) => {
   if (Object.keys(req.body).length === 0)
@@ -11,14 +12,14 @@ module.exports.create = async (req, res) => {
 
   const { name, price, schoolId, schoolYearsId } = req.body;
   let deadlines = req?.body?.deadlines;
-  if (!name || !price || !schoolId || !schoolYearsId) {
+  if (!name || !price || !schoolId ) {
     return res.status(400).json({ msg: "error", err: "data no complete" });
   }
 
   let schoolYear, school;
 
   try {
-    school = await schoolModel.findById(schoolId);
+    school = await schoolModel.findById(schoolId); //TODO create service to school
     schoolYear = school.schoolYears.find((d) => d._id.equals(schoolYearsId));
   } catch (err) {
     return res.status(400).json({ msg: "error", err: "school no found" });
@@ -29,7 +30,7 @@ module.exports.create = async (req, res) => {
 
   try {
     const session = await mongoose.startSession();
-    await session.withTransaction(async () => {
+    await session.withTransaction(async (session) => {
       const schoolDeadlines = schoolYear.deadlines;
       if (isEmpty(deadlines)) {
         if (isEmpty(schoolDeadlines)) {
@@ -40,8 +41,7 @@ module.exports.create = async (req, res) => {
           let d = [];
           for (const sd of schoolDeadlines) {
             const deadlinesObject = {
-              starDate: sd?.starDate,
-              endDate: sd?.endDate,
+              periodId: sd?._id,
               price: (sd?.price / 100) * price,
             };
             d.push(deadlinesObject);
@@ -49,17 +49,17 @@ module.exports.create = async (req, res) => {
           deadlines = d;
         }
       }
-      const newClassroum = await new classroomModel(
-        {
-          name,
-          totalPrice: price,
-          schoolId,
-          deadlines,
-        },
-        { session }
+      const newClassroum = await classroomModel.create(
+        
+          {
+            name,
+            totalPrice: price,
+            schoolId,
+            deadlines,
+          },        
       );
- if (isEmpty(newClassroum))
-   return res.status(500).json({ msg: "error", err: "Internal error" });
+      if (isEmpty(newClassroum))
+        return res.status(500).json({ msg: "error", err: "Internal error" });
       schoolYear.classroomIds.push(newClassroum._id);
       await school.save({ session });
       const classroum = await newClassroum.save({ session });
@@ -136,15 +136,31 @@ module.exports.note = async (req, res) => {
   if (Object.keys(req.body).length === 0)
     return res.status(400).json({ msg: "error", err: "No data" });
 
-  const { matter, value, matterId, pupilId } = req.body;
+  const { value, matterId, pupilId, noteByPeriodId } = req.body;
   const id = req.params.id;
-  if (!matter || !value || !matterId || !id || !pupilId) {
+  if (!value || !id || !pupilId || !noteByPeriodId || !matterId) {
     return res.status(400).json({ msg: "error", err: "data no complete" });
   }
-  const data = await classroumService.note(id, pupilId, {
-    matter,
+  const data = await classroumService.note(id, pupilId, noteByPeriodId, {
     value,
-    matterId,
+    matterId
   });
   return await globalSatuts(res, data);
 };
+
+
+module.exports.update = async (req, res) => {
+  if (Object.keys(req.body).length === 0)
+    return res.status(400).json({ msg: "error", err: "No data" });
+
+  const data = await classroumService.update(req.params.id, req.body)
+  return await globalSatuts(res, data);
+}
+
+module.exports.updatePupil = async (req, res) => {
+  if (Object.keys(req.body).length === 0)
+  return res.status(400).json({ msg: "error", err: "No data" });
+
+const data = await classroumService.updatePupil(req.params.id, req.body)
+return await globalSatuts(res, data);
+}
