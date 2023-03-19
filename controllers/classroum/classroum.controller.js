@@ -12,7 +12,7 @@ module.exports.create = async (req, res) => {
 
   const { name, price, schoolId, schoolYearsId } = req.body;
   let deadlines = req?.body?.deadlines;
-  if (!name || !price || !schoolId ) {
+  if (!name || !price || !schoolId) {
     return res.status(400).json({ msg: "error", err: "data no complete" });
   }
 
@@ -20,13 +20,17 @@ module.exports.create = async (req, res) => {
 
   try {
     school = await schoolModel.findById(schoolId); //TODO create service to school
-    schoolYear = school.schoolYears.find((d) => d._id.equals(schoolYearsId));
+    if (schoolYearsId)
+      schoolYear = school.schoolYears.find((d) => d._id.equals(schoolYearsId));
+    else {
+      schoolYear = school.schoolYears[school.schoolYears.length - 1]
+    }
   } catch (err) {
     return res.status(400).json({ msg: "error", err: "school no found" });
   }
 
   if (!schoolYear)
-    return res.status(400).json({ msg: "error", err: "dynamicId no found" });
+    return res.status(400).json({ msg: "error", err: "schoolYear is null" });
 
   try {
     const session = await mongoose.startSession();
@@ -50,13 +54,13 @@ module.exports.create = async (req, res) => {
         }
       }
       const newClassroum = await classroomModel.create(
-        
-          {
-            name,
-            totalPrice: price,
-            schoolId,
-            deadlines,
-          },        
+
+        {
+          name,
+          totalPrice: price,
+          schoolId,
+          deadlines,
+        },
       );
       if (isEmpty(newClassroum))
         return res.status(500).json({ msg: "error", err: "Internal error" });
@@ -98,6 +102,31 @@ module.exports.matter = async (req, res) => {
   }
   const data = { name, coef, teacherId, horaire };
   const response = await classroumService.matter(req.params.id, data);
+  return await globalSatuts(res, response);
+};
+
+module.exports.absence = async (req, res) => {
+  if (Object.keys(req.body).length === 0)
+    return res.status(400).json({ msg: "error", err: "No data" });
+
+  const { timeNumber, periodId, pupils } = req.body;
+  if (!timeNumber || !periodId || isEmpty(pupils)) {
+    return res.status(400).json({ msg: "error", err: "data no complete" });
+  }
+  const response = await classroumService.absence(req.params.id, req.body);
+  return await globalSatuts(res, response);
+}
+
+module.exports.addAbsence = async (req, res) => {
+  if (Object.keys(req.body).length === 0)
+    return res.status(400).json({ msg: "error", err: "No data" });
+
+  const { absenceId, pupils } = req.body;
+  if (!absenceId || !pupils) {
+    return res.status(400).json({ msg: "error", err: "data no complete" });
+  }
+
+  const response = await classroumService.addAbsence(req.params.id, req.body);
   return await globalSatuts(res, response);
 };
 
@@ -159,8 +188,16 @@ module.exports.update = async (req, res) => {
 
 module.exports.updatePupil = async (req, res) => {
   if (Object.keys(req.body).length === 0)
-  return res.status(400).json({ msg: "error", err: "No data" });
+    return res.status(400).json({ msg: "error", err: "No data" });
 
-const data = await classroumService.updatePupil(req.params.id, req.body)
-return await globalSatuts(res, data);
+  const data = await classroumService.updatePupil(req.params.id, req.body)
+  return await globalSatuts(res, data);
+}
+
+module.exports.updateAbsence = async (req, res) => {
+  if (Object.keys(req.body).length === 0)
+    return res.status(400).json({ msg: "error", err: "No data" });
+
+  const data = await classroumService.updateAbsence(req.params.id, req.body)
+  return await globalSatuts(res, data);
 }
