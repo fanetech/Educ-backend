@@ -33,15 +33,19 @@ const classroomSchema = mongoose.Schema(
     fileId: {
       type: [String],
     },
-    absence: {
+    absences: {
       type: [
         {
-          date: Date,
-          time: Number,
-          detail: {
+          date: {
+            type: Date,
+            default: new Date()
+          },
+          timeNumber: Number,
+          periodId: String,
+          pupils: {
             type: [
               {
-                pupilId: Number,
+                pupilId: String,
                 reason: String,
                 justify: {
                   type: Boolean,
