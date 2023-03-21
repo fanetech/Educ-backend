@@ -70,7 +70,7 @@ module.exports.getOne = async (req, res) => {
       if (school) return res.status(200).json({ msg: "success", school });
       else return res.status(201).json({ msg: "err", err: "no found" });
     })
-    .populate("schoolYears.classroomIds")
+    .populate("schoolYears.classroomIds", ["name", "totalPupil"])
     .populate("actors.userId", ["userName", "firstName", "lastName", "number", "email"]);
 };
 
@@ -266,7 +266,7 @@ module.exports.getSchoolOfUser = async (req, res) => {
         userId: req.body.userId,
       },
     },
-  });
+  })
   return res.status(200).json({ msg: "success", userSchools });
 };
 

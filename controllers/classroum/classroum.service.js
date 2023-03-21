@@ -119,7 +119,7 @@ module.exports.addAbsence = async (id, data) => {
   } catch (error) {
     console.log("classroom_add_absence_error =>", error);
     return { send: { msg: "error", err: "Internal error" }, status: 500 };
-  }
+  } 
 }
 
 module.exports.pupil = async (id, data) => {
@@ -142,7 +142,12 @@ module.exports.pupil = async (id, data) => {
     }
 
     const school = await schoolModel.findById(classroom.schoolId);
-    const currentSchoolYear = getCurrentObject(school.schoolYears);
+    let currentSchoolYear;
+    if(data.schoolYearId){
+      currentSchoolYear = getObjectValue(data.schoolYearId, school.schoolYears)
+    }else{
+      currentSchoolYear = getCurrentObject(school.schoolYears);
+    }
     const periods = currentSchoolYear.periods;
 
     if (isEmpty(periods))
@@ -170,7 +175,7 @@ module.exports.pupil = async (id, data) => {
 
     if (!c)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", classroom: c }, status: 200 };
+    return { send: { msg: "success", pupil: getCurrentObject(c.pupils) }, status: 200 };
 
   } catch (err) {
     console.log(err);

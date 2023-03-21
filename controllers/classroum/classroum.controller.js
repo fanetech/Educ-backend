@@ -142,6 +142,7 @@ module.exports.pupil = async (req, res) => {
     birthday,
     oldSchool,
     birthCountry,
+    schoolYearId
   } = req.body;
   if (!lastname || !firstname || !birthday || !birthCountry) {
     return res.status(400).json({ msg: "error", err: "data no complete" });
@@ -156,6 +157,7 @@ module.exports.pupil = async (req, res) => {
     oldSchool,
     birthCountry,
     createdAt: new Date(),
+    schoolYearId
   };
   const response = await classroumService.pupil(req.params.id, data);
   return await globalSatuts(res, response);
