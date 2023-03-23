@@ -1,6 +1,7 @@
 const schoolModel = require("../../models/school.model");
 const userModel = require("../../models/user.model");
-const { ACTORS_ROLE, DIVISION } = require("../../services/constant");
+const { ACTORS_ROLE, DIVISION, DIVISION_VALUE } = require("../../services/constant");
+const { getCurrentObject } = require("../../utils/utils.tools");
 const { createDirectory, createFile } = require("../files/directory.service");
 const { parseDate } = require("./school.services");
 
@@ -118,13 +119,14 @@ module.exports.softDelete = async (req, res) => {
 
 // To Manage school year
 module.exports.createYearSchool = async (req, res) => {
-  const { starYear, endYear, division } = req.body;
+  const { starYear, endYear, division, nDivision } = req.body;
 
   if (!starYear || !endYear || !division) {
     return res.status(400).json({ msg: "error", err: "Data no complete" });
   }
 
   const _division = DIVISION.find(d => d === division)
+
   if (!_division) {
     return res.status(400).json({ msg: "error", err: "division incorect. use this: " + DIVISION });
   }
@@ -132,6 +134,15 @@ module.exports.createYearSchool = async (req, res) => {
   const fullYear = `${parseDate(starYear).getFullYear()}-${parseDate(
     endYear
   ).getFullYear()}`;
+
+  let _nDivison;
+  if (division === "others") {
+    if (!nDivision)
+      return res.status(400).json({ msg: "error", err: "nDivision is required for others" });
+    _nDivison = nDivision
+  } else {
+    _nDivison = DIVISION_VALUE[division]
+  }
   schoolModel.findByIdAndUpdate(
     req.params.id,
     {
@@ -141,12 +152,13 @@ module.exports.createYearSchool = async (req, res) => {
           starYear: starYear,
           endYear: endYear,
           division: division,
+          nDivision: _nDivison
         },
       },
     },
     { new: true },
     (err, school) => {
-      if (!err) return res.status(200).json({ msg: "success", school });
+      if (!err) return res.status(200).json({ msg: "success", docs: getCurrentObject(school.schoolYears) });
       else
         return res
           .status(500)
@@ -174,6 +186,13 @@ module.exports.createYearSchoolPeriod = async (req, res) => {
         .status(404)
         .json({ msg: "error", err: "School year no found" });
     }
+
+    const getSchoolYearLength = theYear.periods.length;
+    if (getSchoolYearLength >= theYear.nDivision)
+      return res
+        .status(400)
+        .json({ msg: "error", err: "school year division is complete" });
+
     theYear.periods.push({
       starDate: starDate,
       endDate: endDate,
@@ -181,7 +200,7 @@ module.exports.createYearSchoolPeriod = async (req, res) => {
     });
 
     docs.save((err) => {
-      if (!err) return res.status(200).json({ msg: "success", docs });
+      if (!err) return res.status(200).json({ msg: "success", docs: getCurrentObject(theYear.periods) });
       return res.status(500).json({ msg: "error", err: "Internal error" });
     });
   });
@@ -365,6 +384,7 @@ module.exports.updateSchool = (req, res) => {
     periodId,
     deadlineId,
     division,
+    nDivision,
     role,
     actif,
     userId,
@@ -381,13 +401,13 @@ module.exports.updateSchool = (req, res) => {
       if (!theActor)
         return res.status(404).json({ msg: "error", err: "actor no found" });
 
-      if (role){
+      if (role) {
         const _role = ACTORS_ROLE.find(ar => ar === role)
         if (!_role) {
           return res.status(400).json({ msg: "error", err: "role incorect. use this: " + ACTORS_ROLE });
         }
         theActor.role = role;
-      } 
+      }
       if (actif != null) theActor.actif = actif;
       if (userId) theActor.userId = userId;
     }
@@ -412,14 +432,35 @@ module.exports.updateSchool = (req, res) => {
 
       if (starYear) {
         _theSchoolYear.starYear = starYear;
+        const fullYear = `${parseDate(_theSchoolYear.starYear).getFullYear()}-${parseDate(
+          _theSchoolYear.endYear
+        ).getFullYear()}`;
+        _theSchoolYear.fullYear = fullYear // TODO
       }
-
+      
       if (endYear) {
         _theSchoolYear.endYear = endYear;
+        const fullYear = `${parseDate(_theSchoolYear.starYear).getFullYear()}-${parseDate(
+          _theSchoolYear.endYear
+        ).getFullYear()}`;
+        _theSchoolYear.fullYear = fullYear // TODO
       }
 
       if (division) {
+        const _division = DIVISION.find(d => d === division)
+        if (!_division) {
+          return res.status(400).json({ msg: "error", err: "division incorect. use this: " + DIVISION });
+        }
+        let _nDivison;
+        if (division === "others") {
+          if (!nDivision)
+            return res.status(400).json({ msg: "error", err: "nDivision is required for others" });
+          _nDivison = nDivision
+        } else {
+          _nDivison = DIVISION_VALUE[division]
+        }
         _theSchoolYear.division = division;
+        _theSchoolYear.nDivision = _nDivison;
       }
 
       if (starDateP || endDateP || periodId || status != null) {

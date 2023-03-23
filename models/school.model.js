@@ -37,13 +37,14 @@ const schoolSchema = mongoose.Schema(
           fullYear: String,
           starYear: Date,
           endYear: Date,
+          nDivison: Number,
           division: {
             type: String,
             default: "other",
-            // enum: {
-            //   values: DIVISION,
-            //   message:"{VALUE} Non supporter. try this ('trimester', 'semester', 'others')",
-            // },
+            enum: {
+              values: DIVISION,
+              message:"{VALUE} Non supporter. try this ('trimester', 'semester', 'others')",
+            },
           },
           periods: {
             type: [
