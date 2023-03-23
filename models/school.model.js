@@ -37,7 +37,7 @@ const schoolSchema = mongoose.Schema(
           fullYear: String,
           starYear: Date,
           endYear: Date,
-          nDivison: Number,
+          nDivision: Number,
           division: {
             type: String,
             default: "other",

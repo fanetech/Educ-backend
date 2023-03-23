@@ -6,12 +6,11 @@ const emailRoute = require("./routes/mails/mail.route");
 const schoolRoute = require("./routes/school/school.route");
 const directoryRoute = require("./routes/files/directory.route");
 const classroumRoute = require("./routes/classroum/classroum.route");
-const connectDB = require("./config/db");
 require("dotenv").config({ path: "./config/.env" });
-// require("./config/db");
+require("./config/db");
 
 // Connection DB
-connectDB()
+// connectDB()
 
 const app = express();
 const PORT = process.env.PORT ?? 5000;

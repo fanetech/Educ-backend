@@ -1,78 +1,38 @@
 const schoolModel = require("../../models/school.model");
 const userModel = require("../../models/user.model");
 const { ACTORS_ROLE, DIVISION, DIVISION_VALUE } = require("../../services/constant");
-const { getCurrentObject } = require("../../utils/utils.tools");
+const utilsError = require("../../utils/utils.errors");
+const utilsTools = require("../../utils/utils.tools");
 const { createDirectory, createFile } = require("../files/directory.service");
-const { parseDate } = require("./school.services");
+const schoolService = require("./school.services")
 
 module.exports.create = async (req, res) => {
-  const { schoolName, slogan, founderId } = req.body;
-  if (!schoolName || !slogan || !founderId) {
-    return res.status(400).json({ msg: "error", err: "data no complete" });
+  const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
   }
-  let newSchool;
 
-  newSchool = new schoolModel({
-    schoolName,
-    slogan,
-    founderId,
-  });
-  newSchool.actors = {
-    role: "founder",
-    actif: true,
-    userId: founderId,
-  };
-  const school = await newSchool.save();
-  if (!school._id)
-    return res.status(500).json({ msg: "error", err: "Internal error" });
+  const response = await schoolService.create(req.body)
 
-  userModel.findByIdAndUpdate(
-    founderId,
-    {
-      $push: {
-        school: {
-          schoolId: school._id,
-          role: "founder",
-        },
-      },
-    },
-    { new: true },
-    (err, _) => {
-      if (err) {
-        schoolModel.findByIdAndRemove(school._id, (err, _) => {
-          if (err) {
-            console.log("error to delete school", err);
-            return res
-              .status(500)
-              .json({ msg: "error", err: "Internal error" });
-          }
-          return res
-            .status(404)
-            .json({ msg: "error", err: "founderId no found" });
-        });
-      } else return res.status(200).json({ msg: "success", school });
-    }
-  );
+  return await utilsError.globalSatuts(res, response)
 };
 
 module.exports.getAll = async (req, res) => {
   schoolModel
     .find((err, schools) => {
-      if (!err) return res.status(200).json({ msg: "success", schools });
+      if (!err) return res.status(200).json({ msg: "success", docs: schools });
       else return res.status(500).send({ msg: "error", err });
     })
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 }).populate("schoolYears.classroomIds", ["name", "totalPupil"]).populate("actors.userId", ["userName", "firstName", "lastName", "number", "email"]);
 };
 
 module.exports.getOne = async (req, res) => {
+
   const id = req.params.id;
-  schoolModel
-    .findById(id, (err, school) => {
-      if (school) return res.status(200).json({ msg: "success", school });
-      else return res.status(201).json({ msg: "err", err: "no found" });
-    })
-    .populate("schoolYears.classroomIds", ["name", "totalPupil"])
-    .populate("actors.userId", ["userName", "firstName", "lastName", "number", "email"]);
+  const response = await schoolService.getOne(id)
+   return await utilsError.globalSatuts(res, response);
+   
 };
 
 module.exports.update = async (req, res) => {
@@ -88,7 +48,7 @@ module.exports.update = async (req, res) => {
     { $set: updateRecord },
     { new: true },
     (err, school) => {
-      if (!err) res.status(200).json({ msg: "success", school });
+      if (!err) res.status(200).json({ msg: "success", docs: school });
       else res.status(201).json({ msg: "error", err });
     }
   );
@@ -131,7 +91,7 @@ module.exports.createYearSchool = async (req, res) => {
     return res.status(400).json({ msg: "error", err: "division incorect. use this: " + DIVISION });
   }
 
-  const fullYear = `${parseDate(starYear).getFullYear()}-${parseDate(
+  const fullYear = `${utilsTools.parseDate(starYear).getFullYear()}-${utilsTools.parseDate(
     endYear
   ).getFullYear()}`;
 
@@ -158,7 +118,7 @@ module.exports.createYearSchool = async (req, res) => {
     },
     { new: true },
     (err, school) => {
-      if (!err) return res.status(200).json({ msg: "success", docs: getCurrentObject(school.schoolYears) });
+      if (!err) return res.status(200).json({ msg: "success", docs: utilsTools.getCurrentObject(school.schoolYears) });
       else
         return res
           .status(500)
@@ -200,7 +160,7 @@ module.exports.createYearSchoolPeriod = async (req, res) => {
     });
 
     docs.save((err) => {
-      if (!err) return res.status(200).json({ msg: "success", docs: getCurrentObject(theYear.periods) });
+      if (!err) return res.status(200).json({ msg: "success", docs: utilsTools.getCurrentObject(theYear.periods) });
       return res.status(500).json({ msg: "error", err: "Internal error" });
     });
   });
@@ -231,7 +191,7 @@ module.exports.createYearSchoolDeadline = async (req, res) => {
     });
 
     docs.save((err) => {
-      if (!err) return res.status(200).json({ msg: "success", docs });
+      if (!err) return res.status(200).json({ msg: "success", docs: utilsTools.getCurrentObject(theYear.deadlines) });
       return res
         .status(500)
         .json({ msg: "error", err: "Internal error", error: err });
@@ -263,15 +223,13 @@ module.exports.createSchoolActor = (req, res) => {
       },
       { new: true },
       (err, docs) => {
-        if (!err) res.status(200).json({ msg: "success", docs });
+        if (!err) res.status(200).json({ msg: "success",  docs: utilsTools.getCurrentObject(docs.actors) });
         else
           res
             .status(500)
             .json({ msg: "error", err: "Internal error or Actor no found" });
       }
-    )
-    .populate("schoolYears.classroomIds", "name")
-    .populate("actors.userId", ["userName", "firstName", "lastName"]);;
+    ).populate("actors.userId", ["userName", "firstName", "lastName", "number", "email"]);
 };
 
 //service
@@ -286,7 +244,7 @@ module.exports.getSchoolOfUser = async (req, res) => {
       },
     },
   })
-  return res.status(200).json({ msg: "success", userSchools });
+  return res.status(200).json({ msg: "success", docs: userSchools });
 };
 
 //libary management
@@ -322,7 +280,7 @@ module.exports.createLibrary = async (req, res) => {
         if (!err)
           return res
             .status(200)
-            .json({ msg: "success", school, directory: cd?.send?.directory });
+            .json({ msg: "success", school, docs : cd?.send?.directory });
         return res.status(500).json({ msg: "error", err: err });
       });
     } else {
@@ -353,7 +311,7 @@ module.exports.createLibraryFile = (req, res) => {
         if (!err)
           return res
             .status(200)
-            .json({ msg: "success", school, directory: cd?.send?.directory });
+            .json({ msg: "success", school, docs: cd?.send?.directory });
         return res.status(500).json({ msg: "error", err });
       });
     } else {
@@ -366,131 +324,69 @@ module.exports.createLibraryFile = (req, res) => {
   });
 };
 
-//update school object
-module.exports.updateSchool = (req, res) => {
-  if (Object.keys(req.body).length === 0)
-    return res.status(400).json({ msg: "error", err: "No data" });
+module.exports.updateSchool = async (req, res) => {
+  
+  const reqAnalityc = utilsTools.checkRequest(req)
 
-  const {
-    starDateP,
-    endDateP,
-    starDateD,
-    endDateD,
-    status,
-    price,
-    starYear,
-    endYear,
-    schoolYearId,
-    periodId,
-    deadlineId,
-    division,
-    nDivision,
-    role,
-    actif,
-    userId,
-    actorId,
-  } = req.body;
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
 
-  schoolModel.findById(req.params.id, (err, docs) => {
-    if (err)
-      return res.status(404).json({ msg: "error", err: "School no found" });
+  const response = await schoolService.updateSchool(req.params.id, req.body)
 
-    if (role || actif != null || userId || actorId) {
-      const theActor = docs.actors.find((actor) => actor._id.equals(actorId));
+  return await utilsError.globalSatuts(res, response)
 
-      if (!theActor)
-        return res.status(404).json({ msg: "error", err: "actor no found" });
+}
 
-      if (role) {
-        const _role = ACTORS_ROLE.find(ar => ar === role)
-        if (!_role) {
-          return res.status(400).json({ msg: "error", err: "role incorect. use this: " + ACTORS_ROLE });
-        }
-        theActor.role = role;
-      }
-      if (actif != null) theActor.actif = actif;
-      if (userId) theActor.userId = userId;
-    }
+module.exports.updateSchoolYear = async (req, res) => {
+  const reqAnalityc = utilsTools.checkRequest(req)
 
-    if (
-      starYear ||
-      endYear ||
-      division ||
-      starDateP ||
-      endDateP ||
-      periodId ||
-      status != null ||
-      starDateD ||
-      endDateD ||
-      price
-    ) {
-      const _theSchoolYear = docs.schoolYears.find((schoolYear) =>
-        schoolYear._id.equals(schoolYearId)
-      );
-      if (!_theSchoolYear)
-        return res.status(404).json({ msg: "error", err: "Year no found" });
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
 
-      if (starYear) {
-        _theSchoolYear.starYear = starYear;
-        const fullYear = `${parseDate(_theSchoolYear.starYear).getFullYear()}-${parseDate(
-          _theSchoolYear.endYear
-        ).getFullYear()}`;
-        _theSchoolYear.fullYear = fullYear // TODO
-      }
-      
-      if (endYear) {
-        _theSchoolYear.endYear = endYear;
-        const fullYear = `${parseDate(_theSchoolYear.starYear).getFullYear()}-${parseDate(
-          _theSchoolYear.endYear
-        ).getFullYear()}`;
-        _theSchoolYear.fullYear = fullYear // TODO
-      }
+  const response = await schoolService.updateSchoolYear(req.params.id, req.body)
 
-      if (division) {
-        const _division = DIVISION.find(d => d === division)
-        if (!_division) {
-          return res.status(400).json({ msg: "error", err: "division incorect. use this: " + DIVISION });
-        }
-        let _nDivison;
-        if (division === "others") {
-          if (!nDivision)
-            return res.status(400).json({ msg: "error", err: "nDivision is required for others" });
-          _nDivison = nDivision
-        } else {
-          _nDivison = DIVISION_VALUE[division]
-        }
-        _theSchoolYear.division = division;
-        _theSchoolYear.nDivision = _nDivison;
-      }
+  return await utilsError.globalSatuts(res, response)
 
-      if (starDateP || endDateP || periodId || status != null) {
-        const thePeriods = _theSchoolYear.periods.find((period) =>
-          period._id.equals(periodId)
-        );
-        if (!thePeriods)
-          return res.status(404).json({ msg: "error", err: "Period no found" });
-        if (starDateP) thePeriods.starDate = starDateP;
-        if (endDateP) thePeriods.endDate = endDateP;
-        if (status !== null) thePeriods.status = status;
-      }
+}
 
-      if (starDateD || endDateD || price) {
-        const thedeadlines = _theSchoolYear.deadlines.find((deadline) =>
-          deadline._id.equals(deadlineId)
-        );
-        if (!thedeadlines)
-          return res
-            .status(400)
-            .json({ msg: "error", err: "daedline no found" });
-        if (starDateD) thedeadlines.starDate = starDateD;
-        if (endDateD) thedeadlines.endDate = endDateD;
-        if (price) thedeadlines.price = price;
-      }
-    }
-    return docs.save((err) => {
-      if (!err) return res.status(200).json({ msg: "success", docs });
+module.exports.updateSchoolYearPeriod = async (req, res) => {
+  const reqAnalityc = utilsTools.checkRequest(req)
 
-      return res.status(500).json({ msg: "error", err: "Internal error" });
-    });
-  });
-};
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
+
+  const response = await schoolService.updateSchoolYearPeriod(req.params.id, req.body)
+
+  return await utilsError.globalSatuts(res, response)
+
+}
+
+module.exports.updateSchoolActor = async (req, res) => {
+  const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
+
+  const response = await schoolService.updateSchoolActor(req.params.id, req.body)
+
+  return await utilsError.globalSatuts(res, response)
+
+}
+
+module.exports.updateSchoolYearDeadline = async (req, res) => {
+  const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
+
+  const response = await schoolService.updateSchoolYearDeadline(req.params.id, req.body)
+
+  return await utilsError.globalSatuts(res, response)
+
+}
+

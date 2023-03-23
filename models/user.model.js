@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const { isEmail } = require('validator');
-const bcrypt = require("bcrypt");
 const { BOOL } = require('../services/constant');
 const userSchema = mongoose.Schema(
   {
@@ -17,7 +16,7 @@ const userSchema = mongoose.Schema(
       type: String,
       trim: true,
     },
-    school: [
+    schools: [
       {
         schoolId: String,
         role: String,
@@ -61,12 +60,5 @@ const userSchema = mongoose.Schema(
     timestamps: true,
   }
 );
-
-//play function before save user and crypt password
-userSchema.pre("save", async function (next) {
-	const salt = await bcrypt.genSalt();
-	this.password = await bcrypt.hash(this.password, salt);
-	next();
-  });
 
 module.exports = mongoose.model('user', userSchema);

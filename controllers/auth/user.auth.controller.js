@@ -17,7 +17,7 @@ module.exports.login = async (req, res) => {
     return res.status(400).json({ msg: "error", err: "No data" });
   const { password, method } = req.body;
   if (!password || !method)
-  return res.status(400).json({ msg: "error", err: "data no complete" });
+    return res.status(400).json({ msg: "error", err: "data no complete" });
   try {
     const user = await userModel.findOne({
       $or: [
@@ -41,7 +41,7 @@ module.exports.login = async (req, res) => {
     }
     delete user["password"];
     const token = createToken(user._id);
-    res.status(200).json({ msg: "success", user: user, token: token });
+    res.status(200).json({ msg: "success", docs: user, token: token });
   } catch (err) {
     const errors = signInErrors(err);
     console.log(err);
@@ -52,22 +52,29 @@ module.exports.login = async (req, res) => {
 module.exports.register = async (req, res) => {
   if (Object.keys(req.body).length === 0)
     return res.status(400).json({ msg: "error", err: "No data" });
+
   const { number, email, password, role } = req.body;
   if ((!number || !email) && !password && !role) {
     return res.status(400).json({ msg: "error", err: "data no complete" });
   }
+
   const _role = USER_ROLE[role]
   if (!_role) {
     return res.status(400).json({ msg: "error", err: "role incorect" });
   }
+    
+  //crypt password
+  const salt = await bcrypt.genSalt();
+  const hashPassword = await bcrypt.hash(password, salt);
+
   try {
     const user = await userModel.create({
       number,
       email,
-      password,
+      password: hashPassword,
       role
     });
-    res.status(200).json({ msg: "success", user: user });
+    res.status(200).json({ msg: "success", docs: user });
   } catch (err) {
     const errors = signUpErrors(err);
     res.status(500).json({ msg: "error", errors });

@@ -18,7 +18,7 @@ module.exports.create = async (req, res) => {
       pseudo,
     };
     const user = await userService.create(d);
-    res.status(200).json({ msg: "success", user });
+    res.status(200).json({ msg: "success", docs: user });
   } catch (err) {
     const errors = userCreateError(err);
     console.log(err);
@@ -35,15 +35,15 @@ module.exports.update = async (req, res) => {
     mark: u.mark + req.body.mark,
   };
   const user = await userService.update(req.params.id, d);
-  res.status(200).json({ msg: "success", user });
+  res.status(200).json({ msg: "success", docs: user });
 };
 
 module.exports.findOne = async (req, res) => {
   const user = await userService.findOne(req.params.id);
-  res.status(200).json({ msg: "success", user });
+  res.status(200).json({ msg: "success", docs: user });
 };
 
 module.exports.delete = async (req, res) => {
   const user = await userService.delete(req.params.id);
-  res.status(200).json({ msg: "success", user });
+  res.status(200).json({ msg: "success", docs: user });
 };
