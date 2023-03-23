@@ -53,7 +53,7 @@ module.exports.globalSatuts = (res, data) => {
       errors.name = "Nom incorrect ou Existe déja";
 
     if (err.code === 11000 && Object.keys(err.keyValue)[0].includes("name"))
-      errors.number = "Nom incorrect ou Existe déja";
+      errors.name = "Nom incorrect ou Existe déja";
 
     return errors;
   };

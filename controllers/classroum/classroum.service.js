@@ -2,6 +2,73 @@ const classroomModel = require("../../models/classroum.model");
 const { isEmpty } = require("../../utils/utils.tools");
 const schoolModel = require("../../models/school.model");
 const { PUPIL_ROLE, BOOL } = require("../../services/constant");
+const { default: mongoose } = require("mongoose");
+const { classroomError } = require("../../utils/utils.errors");
+
+module.exports.create = async (data) => {
+
+  let schoolYear, school;
+
+  try {
+    school = await schoolModel.findById(data.schoolId); //TODO create service to school
+    if (data?.schoolYearId) {
+      schoolYear = getObjectValue(data?.schoolYearId, school?.schoolYears)
+    } else {
+      schoolYear = getCurrentObject(school?.schoolYears)
+    }
+  } catch (err) {
+    console.log("classroom_create_get_school_error", err)
+    return { send: { msg: "error", err: "school no found" }, status: 404 };
+  }
+
+  if (!schoolYear)
+    return { send: { msg: "error", err: "schoolYear is null" }, status: 404 };
+
+  const session = await mongoose.startSession();
+  session.startTransaction()
+  try {
+    let deadlines = data?.deadlines;
+    const schoolDeadlines = schoolYear.deadlines;
+    if (isEmpty(deadlines)) {
+      if (isEmpty(schoolDeadlines)) {
+        return { send: { msg: "error", err: "deadlines no found in school year" }, status: 400 };
+      } else {
+        let d = [];
+        for (const sd of schoolDeadlines) {
+          const deadlinesObject = {
+            periodId: sd?._id,
+            price: (sd?.price / 100) * data.price,
+          };
+          d.push(deadlinesObject);
+        }
+        deadlines = d;
+      }
+    }
+    const newClassroom = await classroomModel.create(
+      {
+        name: data.name,
+        totalPrice: data.price,
+        schoolId: data.schoolId,
+        deadlines,
+      },
+    );
+    if (isEmpty(newClassroom))
+      return { send: { msg: "error", err: "Internal error" }, status: 500 };
+    schoolYear.classroomIds.push(newClassroom._id);
+    const s = await school.save({ session });
+    const classroom = await newClassroom.save({ session });
+    session.endSession()
+    if (classroom) {
+      return { send: { msg: "success", classroom }, status: 200 };
+    } else {
+      return { send: { msg: "error", err: "Internal error" }, status: 500 };
+    }
+  } catch (err) {
+    session.abortTransaction()
+    console.log("classroom_create_error =>", err);
+    return { send: { msg: "error", err: classroomError(err) }, status: 500 };
+  }
+}
 
 module.exports.getAll = async () => {
   const classroums = await classroomModel.find().sort({ createdAt: -1 });
@@ -37,7 +104,11 @@ module.exports.note = async (id, pupilId, noteByPeriodId, data) => {
     if (!noteByPeriod)
       return { send: { msg: "error", err: "period no found" }, status: 404 };
 
-    if (getObjectValue(data.matterId, noteByPeriod.notes))
+    if (!getObjectValue(data.matterId, classroom.matters))
+      return { send: { msg: "error", err: "matter no found" }, status: 404 };
+
+    const m = noteByPeriod.notes.find(d => d.matterId === data.matterId)
+    if (m)
       return { send: { msg: "error", err: "matter existe" }, status: 404 };
 
     noteByPeriod.notes.push(data);
@@ -46,7 +117,7 @@ module.exports.note = async (id, pupilId, noteByPeriodId, data) => {
     if (!c)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
 
-    return { send: { msg: "success", classroom: c }, status: 200 };
+    return { send: { msg: "success", note: getCurrentObject(noteByPeriod.notes) }, status: 200 };
 
   } catch (err) {
     console.log(err);
@@ -61,12 +132,16 @@ module.exports.matter = async (id, data) => {
     if (!classroom)
       return { send: { msg: "error", err: "class no found" }, status: 404 };
 
+    const checkName = classroom.matters.find(m => m.name.toLowerCase() === data?.name.toLowerCase())
+    if (checkName)
+      return { send: { msg: "error", err: "name existe" }, status: 404 };
+
     classroom.matters.push(data);
     const c = await classroom.save();
 
     if (!c)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", classroom: c }, status: 200 };
+    return { send: { msg: "success", matter: getCurrentObject(classroom.matters) }, status: 200 };
 
   } catch (err) {
     console.log("classroom_matter_error =>", err);
@@ -88,7 +163,7 @@ module.exports.absence = async (id, data) => {
 
     if (!a)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", absences }, status: 200 };
+    return { send: { msg: "success", absence: getCurrentObject(classroom.absences) }, status: 200 };
 
   } catch (error) {
     console.log("classroom_absence_error =>", error);
@@ -114,12 +189,12 @@ module.exports.addAbsence = async (id, data) => {
 
     if (!a)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", absences: absence }, status: 200 };
+    return { send: { msg: "success", absence: getObjectValue(data.absenceId, classroom.absences) }, status: 200 };
 
   } catch (error) {
     console.log("classroom_add_absence_error =>", error);
     return { send: { msg: "error", err: "Internal error" }, status: 500 };
-  } 
+  }
 }
 
 module.exports.pupil = async (id, data) => {
@@ -143,9 +218,9 @@ module.exports.pupil = async (id, data) => {
 
     const school = await schoolModel.findById(classroom.schoolId);
     let currentSchoolYear;
-    if(data.schoolYearId){
+    if (data.schoolYearId) {
       currentSchoolYear = getObjectValue(data.schoolYearId, school.schoolYears)
-    }else{
+    } else {
       currentSchoolYear = getCurrentObject(school.schoolYears);
     }
     const periods = currentSchoolYear.periods;
@@ -372,6 +447,6 @@ const getObjectValue = (id, object) => {
 
 const getCurrentObject = (array) => {
   if (isEmpty(array))
-    return { send: { msg: "error", err: "schoolYear is null" }, status: 404 };
+    return { send: { msg: "error", err: "array is null" }, status: 404 };
   return array[array.length - 1];
 };

@@ -11,76 +11,12 @@ module.exports.create = async (req, res) => {
     return res.status(400).json({ msg: "error", err: "No data" });
 
   const { name, price, schoolId, schoolYearsId } = req.body;
-  let deadlines = req?.body?.deadlines;
   if (!name || !price || !schoolId) {
     return res.status(400).json({ msg: "error", err: "data no complete" });
   }
-
-  let schoolYear, school;
-
-  try {
-    school = await schoolModel.findById(schoolId); //TODO create service to school
-    if (schoolYearsId)
-      schoolYear = school.schoolYears.find((d) => d._id.equals(schoolYearsId));
-    else {
-      schoolYear = school.schoolYears[school.schoolYears.length - 1]
-    }
-  } catch (err) {
-    return res.status(400).json({ msg: "error", err: "school no found" });
-  }
-
-  if (!schoolYear)
-    return res.status(400).json({ msg: "error", err: "schoolYear is null" });
-
-  try {
-    const session = await mongoose.startSession();
-    await session.withTransaction(async (session) => {
-      const schoolDeadlines = schoolYear.deadlines;
-      if (isEmpty(deadlines)) {
-        if (isEmpty(schoolDeadlines)) {
-          return res
-            .status(400)
-            .json({ msg: "error", err: "deadlines no found in school year" });
-        } else {
-          let d = [];
-          for (const sd of schoolDeadlines) {
-            const deadlinesObject = {
-              periodId: sd?._id,
-              price: (sd?.price / 100) * price,
-            };
-            d.push(deadlinesObject);
-          }
-          deadlines = d;
-        }
-      }
-      const newClassroum = await classroomModel.create(
-
-        {
-          name,
-          totalPrice: price,
-          schoolId,
-          deadlines,
-        },
-      );
-      if (isEmpty(newClassroum))
-        return res.status(500).json({ msg: "error", err: "Internal error" });
-      schoolYear.classroomIds.push(newClassroum._id);
-      await school.save({ session });
-      const classroum = await newClassroum.save({ session });
-
-      await session.commitTransaction();
-
-      if (classroum) {
-        return res.status(200).json({ msg: "success", classroum });
-      } else {
-        return res.status(500).json({ msg: "error", err: "Internal error" });
-      }
-    });
-    session.endSession();
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json({ msg: "error", err });
-  }
+  const data = await classroumService.create(req.body);
+  return await globalSatuts(res, data);
+  
 };
 
 module.exports.getAll = async (req, res) => {
