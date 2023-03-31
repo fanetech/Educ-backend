@@ -4,18 +4,30 @@ const schoolModel = require("../../models/school.model");
 const { PUPIL_ROLE, BOOL } = require("../../services/constant");
 const { default: mongoose } = require("mongoose");
 const { classroomError } = require("../../utils/utils.errors");
+const utilsTools = require("../../utils/utils.tools")
+const schoolService = require('../school/school.services')
 
 module.exports.create = async (data) => {
 
   let schoolYear, school;
+  const _classroom = (await this.getByName(data.name))
+  if(_classroom?.send?.classroom){
+    return { send: { msg: "error", err: "name is exist" }, status: 404 };
+  }
 
   try {
-    school = await schoolModel.findById(data.schoolId); //TODO create service to school
+    const _school = await schoolService.getOne(data.schoolId);
+    if(!_school?.send?.docs){
+      return _school
+    }
+    school = _school?.send?.docs
+
     if (data?.schoolYearId) {
       schoolYear = getObjectValue(data?.schoolYearId, school?.schoolYears)
     } else {
       schoolYear = getCurrentObject(school?.schoolYears)
     }
+
   } catch (err) {
     console.log("classroom_create_get_school_error", err)
     return { send: { msg: "error", err: "school no found" }, status: 404 };
@@ -55,15 +67,17 @@ module.exports.create = async (data) => {
     if (isEmpty(newClassroom))
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
     schoolYear.classroomIds.push(newClassroom._id);
-    const s = await school.save({ session });
-    const classroom = await newClassroom.save({ session });
+    const s = await school.save();
+    const classroom = await newClassroom.save(); // TODO delete if failled
+    await session.commitTransaction();
     session.endSession()
     if (classroom) {
-      return { send: { msg: "success", classroom }, status: 200 };
+      return { send: { msg: "success", docs: classroom }, status: 200 };
     } else {
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
     }
   } catch (err) {
+    session.endSession()
     session.abortTransaction()
     console.log("classroom_create_error =>", err);
     return { send: { msg: "error", err: classroomError(err) }, status: 500 };
@@ -72,15 +86,31 @@ module.exports.create = async (data) => {
 
 module.exports.getAll = async () => {
   const classroums = await classroomModel.find().sort({ createdAt: -1 });
-  if (classroums) return { send: { msg: "success", classroums }, status: 200 };
+  if (classroums) return { send: { msg: "success", docs: classroums }, status: 200 };
   else return { send: { msg: "error", err: "Internal error" }, status: 500 };
 };
 
 // TODO
 module.exports.getOne = async (id) => {
   try {
-    const classroom = await classroomModel.findById(id)
-    if (classroom) return { send: { msg: "success", classroom }, status: 200 };
+    if(!utilsTools.checkParams(id)){
+      return { send: { msg: "error", err: "internal error" }, status: 500 }; 
+  }
+    const classroom = await classroomModel.findById(id);
+    if (classroom) return { send: { msg: "success", docs: classroom }, status: 200 }
+    else {
+      return { send: { msg: "error", err: "Internal error" }, status: 404 };
+    }
+  } catch (err) {
+    console.log(err);
+    return { send: { msg: "error", err: err }, status: 500 };
+  }
+};
+
+module.exports.getByName = async (name) => {
+  try {
+    const classroom = await classroomModel.findOne({name: name});
+    if (classroom) return { send: { msg: "success", docs: classroom }, status: 200 };
     else {
       return { send: { msg: "error", err: "Internal error" }, status: 404 };
     }
@@ -117,7 +147,7 @@ module.exports.note = async (id, pupilId, noteByPeriodId, data) => {
     if (!c)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
 
-    return { send: { msg: "success", note: getCurrentObject(noteByPeriod.notes) }, status: 200 };
+    return { send: { msg: "success", docs: getCurrentObject(noteByPeriod.notes) }, status: 200 };
 
   } catch (err) {
     console.log(err);
@@ -127,7 +157,7 @@ module.exports.note = async (id, pupilId, noteByPeriodId, data) => {
 
 module.exports.matter = async (id, data) => {
   try {
-    const classroom = await (await this.getOne(id)).send.classroom;
+    const classroom = await (await this.getOne(id)).send.docs;
 
     if (!classroom)
       return { send: { msg: "error", err: "class no found" }, status: 404 };
@@ -141,7 +171,7 @@ module.exports.matter = async (id, data) => {
 
     if (!c)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", matter: getCurrentObject(classroom.matters) }, status: 200 };
+    return { send: { msg: "success", docs: getCurrentObject(classroom.matters) }, status: 200 };
 
   } catch (err) {
     console.log("classroom_matter_error =>", err);
@@ -151,7 +181,7 @@ module.exports.matter = async (id, data) => {
 
 module.exports.absence = async (id, data) => {
   try {
-    const classroom = (await this.getOne(id)).send.classroom;
+    const classroom = (await this.getOne(id)).send.docs;
 
     if (!classroom)
       return { send: { msg: "error", err: "class no found" }, status: 404 };
@@ -163,7 +193,7 @@ module.exports.absence = async (id, data) => {
 
     if (!a)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", absence: getCurrentObject(classroom.absences) }, status: 200 };
+    return { send: { msg: "success", docs: getCurrentObject(classroom.absences) }, status: 200 };
 
   } catch (error) {
     console.log("classroom_absence_error =>", error);
@@ -172,7 +202,7 @@ module.exports.absence = async (id, data) => {
 }
 module.exports.addAbsence = async (id, data) => {
   try {
-    const classroom = (await this.getOne(id)).send.classroom;
+    const classroom = (await this.getOne(id)).send.docs;
 
     if (!classroom)
       return { send: { msg: "error", err: "class no found" }, status: 404 };
@@ -189,7 +219,7 @@ module.exports.addAbsence = async (id, data) => {
 
     if (!a)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", absence: getObjectValue(data.absenceId, classroom.absences) }, status: 200 };
+    return { send: { msg: "success", docs: getObjectValue(data.absenceId, classroom.absences) }, status: 200 };
 
   } catch (error) {
     console.log("classroom_add_absence_error =>", error);
@@ -199,7 +229,7 @@ module.exports.addAbsence = async (id, data) => {
 
 module.exports.pupil = async (id, data) => {
   try {
-    const classroom = await (await this.getOne(id)).send.classroom;
+    const classroom = await (await this.getOne(id)).send.docs;
     classroom.totalPupil = classroom.totalPupil + 1
 
     if (classroom.status === "error")
@@ -250,7 +280,7 @@ module.exports.pupil = async (id, data) => {
 
     if (!c)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", pupil: getCurrentObject(c.pupils) }, status: 200 };
+    return { send: { msg: "success", docs: getCurrentObject(c.pupils) }, status: 200 };
 
   } catch (err) {
     console.log(err);
@@ -261,7 +291,7 @@ module.exports.pupil = async (id, data) => {
 module.exports.update = async (id, data) => {
   try {
     let schoolYear, school;
-    const classroom = (await this.getOne(id)).send.classroom;
+    const classroom = (await this.getOne(id)).send.docs;
     if (!classroom)
       return { send: { msg: "error", err: "classroom no found" }, status: 404 };
 
@@ -309,7 +339,7 @@ module.exports.update = async (id, data) => {
     const c = await classroom.save();
     if (!c)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", classroom: c }, status: 200 };
+    return { send: { msg: "success", docs: c }, status: 200 };
 
   } catch (error) {
     console.log("classroom_update error =>", error);
@@ -319,7 +349,7 @@ module.exports.update = async (id, data) => {
 
 module.exports.updatePupil = async (id, data) => {
   try {
-    const classroom = (await this.getOne(id)).send.classroom;
+    const classroom = (await this.getOne(id)).send.docs;
     if (!classroom)
       return { send: { msg: "error", err: "classroom no found" }, status: 404 };
     const pupil = getObjectValue(data.pupilId, classroom.pupils);
@@ -383,7 +413,7 @@ module.exports.updatePupil = async (id, data) => {
     if (!c)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
 
-    return { send: { msg: "success", pupil }, status: 200 };
+    return { send: { msg: "success", docs: pupil }, status: 200 };
 
   } catch (error) {
     console.log("classroom_updatePupil error =>", error);
@@ -394,7 +424,7 @@ module.exports.updatePupil = async (id, data) => {
 module.exports.updateAbsence = async (id, data) => {
   try {
     let pupil
-    const classroom = (await this.getOne(id)).send.classroom;
+    const classroom = (await this.getOne(id)).send.docs;
     if (!classroom)
       return { send: { msg: "error", err: "classroom no found" }, status: 404 };
 
@@ -430,7 +460,7 @@ module.exports.updateAbsence = async (id, data) => {
     if (!c)
       return { send: { msg: "error", err: "Internal error" }, status: 500 };
 
-    return { send: { msg: "success", absence }, status: 200 };
+    return { send: { msg: "success", docs: absence }, status: 200 };
 
   } catch (error) {
     console.log("classroom_updateAbsence error =>", error);

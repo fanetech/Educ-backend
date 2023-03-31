@@ -10,12 +10,18 @@ router.get("/:id", schoolController.getOne);
 router.put("/:id", schoolController.update);
 router.delete("/:id", schoolController.remove);
 router.delete("/soft/:id", schoolController.softDelete);
-router.patch("/update/:id", schoolController.updateSchool);
 
 //year route
 router.put("/year/:id", schoolController.createYearSchool);
 router.put("/year/period/:id", schoolController.createYearSchoolPeriod);
 router.put("/year/deadline/:id", schoolController.createYearSchoolDeadline);
+
+//update
+router.patch("/update/:id", schoolController.updateSchool);
+router.patch("/update/year/:id", schoolController.updateSchoolYear);
+router.patch("/update/period/:id", schoolController.updateSchoolYearPeriod);
+router.patch("/update/actor/:id", schoolController.updateSchoolActor);
+router.patch("/update/deadline/:id", schoolController.updateSchoolYearDeadline);
 
 //library route
 router.post("/library/:id", schoolController.createLibrary);
