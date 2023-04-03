@@ -1,3 +1,6 @@
+const { STATUS_CODE } = require('../services/constant');
+const handleError = require('../services/handleError')
+
 module.exports.signUpErrors = (err) => {
     let errors = { number: "", email: "", password: "" };
   
@@ -14,8 +17,10 @@ module.exports.signUpErrors = (err) => {
   
     if (err.code === 11000 && Object.keys(err.keyValue)[0].includes("email"))
       errors.email = "Cet email est déjà enregistré";
+
+      const r = `${errors.number} ${errors.password} ${errors.email}`
   
-    return errors;
+    return handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, r );
   };
   
   module.exports.signInErrors = (err) => {
@@ -35,6 +40,10 @@ module.exports.globalSatuts = (res, data) => {
         return res.status(200).json(data.send);
       case 500:
          return res.status(500).json(data.send);
+      case 502:
+         return res.status(502).json(data.send);
+      case 503:
+         return res.status(503).json(data.send);
       case 400:
          return res.status(400).json(data.send);
       case 404:

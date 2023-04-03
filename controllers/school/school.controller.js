@@ -1,10 +1,12 @@
 const schoolModel = require("../../models/school.model");
-const userModel = require("../../models/user.model");
-const { ACTORS_ROLE, DIVISION, DIVISION_VALUE } = require("../../services/constant");
+const { ACTORS_ROLE, DIVISION, DIVISION_VALUE, STATUS_CODE } = require("../../services/constant");
 const utilsError = require("../../utils/utils.errors");
 const utilsTools = require("../../utils/utils.tools");
 const { createDirectory, createFile } = require("../files/directory.service");
 const schoolService = require("./school.services")
+const handleError = require("../../services/handleError")
+const userService = require("../user/user.service")
+const directorySchama = require("../../models/directory.model")
 
 module.exports.create = async (req, res) => {
   const reqAnalityc = utilsTools.checkRequest(req)
@@ -21,8 +23,14 @@ module.exports.create = async (req, res) => {
 module.exports.getAll = async (req, res) => {
   schoolModel
     .find((err, schools) => {
-      if (!err) return res.status(200).json({ msg: "success", docs: schools });
-      else return res.status(500).send({ msg: "error", err });
+      if (!err){
+
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, schools));
+      }
+      else {
+        console.log("school_getAll_error =>", err)
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR));
+      }
     })
     .sort({ createdAt: -1 }).populate("schoolYears.classroomIds", ["name", "totalPupil"]).populate("actors.userId", ["userName", "firstName", "lastName", "number", "email"]);
 };
@@ -35,34 +43,45 @@ module.exports.getOne = async (req, res) => {
    
 };
 
-module.exports.update = async (req, res) => {
-  const id = req.params.id;
-  const updateRecord = {
-    schoolName: req.body.schoolName,
-    slogan: req.body.slogan,
-    logo: req.body.logo,
-    founderName: req.body.founderName,
-  };
-  schoolModel.findByIdAndUpdate(
-    id,
-    { $set: updateRecord },
-    { new: true },
-    (err, school) => {
-      if (!err) res.status(200).json({ msg: "success", docs: school });
-      else res.status(201).json({ msg: "error", err });
-    }
-  );
+
+module.exports.getSchoolOfUser = async (req, res) => {
+
+  const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
+
+  const {userId}= req.body
+  
+  if (!userId) {
+
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, "utilisateur"));
+  }
+
+  try {
+    
+    const userSchools = await schoolModel.find({
+      actors: {
+        $elemMatch: {
+          userId: userId,
+        },
+      },
+    })
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, userSchools));
+  } catch (error) {
+    
+    console.log("school_getSchoolOfUser_error =>", error)
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR));
+  }
 };
 
 module.exports.remove = async (req, res) => {
   const id = req.params.id;
-  schoolModel.findByIdAndRemove(id, (err, school) => {
-    if (err)
-      return res.status(500).json({ msg: "error", err: "internal error" });
-    if (!school)
-      return res.status(404).json({ msg: "error", err: "school no found" });
-    return res.status(200).json({ msg: "success" });
-  });
+
+  const response = await schoolService.remove(id)
+
+   return await utilsError.globalSatuts(res, response);
 };
 
 module.exports.softDelete = async (req, res) => {
@@ -71,24 +90,38 @@ module.exports.softDelete = async (req, res) => {
     { $set: { isDeleted: true } },
     { new: true },
     (err, school) => {
-      if (!err) res.status(200).json({ msg: "success" });
-      else res.status(201).json({ msg: "error", err });
+
+      if (!err){
+        
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, null, "ok"));
+      } 
+      else{
+        console.log("school_softDelete_error =>", err)
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR));
+      } 
     }
   );
 };
 
-// To Manage school year
+/********************To Manage school year**************************/
+
 module.exports.createYearSchool = async (req, res) => {
+
+  const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
   const { starYear, endYear, division, nDivision } = req.body;
 
   if (!starYear || !endYear || !division) {
-    return res.status(400).json({ msg: "error", err: "Data no complete" });
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.NOT_DATA, null, "date ou division"));
   }
 
   const _division = DIVISION.find(d => d === division)
 
   if (!_division) {
-    return res.status(400).json({ msg: "error", err: "division incorect. use this: " + DIVISION });
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, "utiliser: "+DIVISION.toString()));
   }
 
   const fullYear = `${utilsTools.parseDate(starYear).getFullYear()}-${utilsTools.parseDate(
@@ -98,7 +131,7 @@ module.exports.createYearSchool = async (req, res) => {
   let _nDivison;
   if (division === "others") {
     if (!nDivision)
-      return res.status(400).json({ msg: "error", err: "nDivision is required for others" });
+      return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, "nombre de division"));
     _nDivison = nDivision
   } else {
     _nDivison = DIVISION_VALUE[division]
@@ -118,40 +151,48 @@ module.exports.createYearSchool = async (req, res) => {
     },
     { new: true },
     (err, school) => {
-      if (!err) return res.status(200).json({ msg: "success", docs: utilsTools.getCurrentObject(school.schoolYears) });
-      else
-        return res
-          .status(500)
-          .json({ msg: "error", err: "Internal error or school no found" });
+      if (school){
+
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, utilsTools.getCurrentObject(school.schoolYears)));
+      }
+      else{
+
+        console.log("school_createYearSchool_error =>", err)
+
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement"));
+      }
     }
   );
 };
 
 module.exports.createYearSchoolPeriod = async (req, res) => {
+
+  const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
+
   const { starDate, endDate, status, schoolYearId } = req.body;
 
   if (!starDate || !endDate || status == null || !schoolYearId) {
-    return res.status(400).json({ msg: "error", err: "Data no complete" });
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, "date ou statut"));
   }
 
   schoolModel.findById(req.params.id, (err, docs) => {
-    if (err) {
-      return res.status(404).json({ msg: "error", err: "School no found" });
+    if (!docs) {
+      return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement"));
     }
     const theYear = docs.schoolYears.find((year) =>
       year._id.equals(schoolYearId)
     );
     if (!theYear) {
-      return res
-        .status(404)
-        .json({ msg: "error", err: "School year no found" });
+      return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "année scolaire"));
     }
 
     const getSchoolYearLength = theYear.periods.length;
     if (getSchoolYearLength >= theYear.nDivision)
-      return res
-        .status(400)
-        .json({ msg: "error", err: "school year division is complete" });
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR, null, "vous essayez de dépassé le nombre de division fixé. Verifier votre division"));
 
     theYear.periods.push({
       starDate: starDate,
@@ -160,29 +201,43 @@ module.exports.createYearSchoolPeriod = async (req, res) => {
     });
 
     docs.save((err) => {
-      if (!err) return res.status(200).json({ msg: "success", docs: utilsTools.getCurrentObject(theYear.periods) });
-      return res.status(500).json({ msg: "error", err: "Internal error" });
+      if (!err) {
+        
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, utilsTools.getCurrentObject(theYear.periods) ));
+      }
+      console.log("school_createYearSchoolPeriod_error =>", err)
+      return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR));
     });
   });
 };
 
 module.exports.createYearSchoolDeadline = async (req, res) => {
+
+  const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
+
   const { starDate, endDate, price, schoolYearId } = req.body;
 
   if (!starDate || !endDate || !price || !schoolYearId) {
-    return res.status(400).json({ msg: "error", err: "Data no complete" });
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, "date ou prix"));
   }
 
   schoolModel.findById(req.params.id, (err, docs) => {
-    if (err)
-      return res.status(404).json({ msg: "error", err: "School no found" });
+
+    if (!docs){
+
+      return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement"));
+    }
+
     const theYear = docs.schoolYears.find((year) =>
       year._id.equals(schoolYearId)
     );
+
     if (!theYear) {
-      return res
-        .status(404)
-        .json({ msg: "error", err: "School year no found" });
+      return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, "Année scolaire"));
     }
     theYear.deadlines.push({
       starDate: starDate,
@@ -191,24 +246,42 @@ module.exports.createYearSchoolDeadline = async (req, res) => {
     });
 
     docs.save((err) => {
-      if (!err) return res.status(200).json({ msg: "success", docs: utilsTools.getCurrentObject(theYear.deadlines) });
-      return res
-        .status(500)
-        .json({ msg: "error", err: "Internal error", error: err });
+      if (!err){
+
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS,  utilsTools.getCurrentObject(theYear.deadlines)));
+      }
+
+      return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR));
     });
   });
 };
 
-// Manage school actor
-module.exports.createSchoolActor = (req, res) => {
+/****************************** Manage school actor******************************/ 
+
+module.exports.createSchoolActor = async(req, res) => {
+
+  const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
+
   const { role, actif, userId } = req.body;
   if (!role || actif == null || !userId) {
-    return res.status(400).json({ msg: "error", err: "Data no complete" });
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, "role ou statut(actif)"));
   }
   const _role = ACTORS_ROLE.find(ar => ar === role)
   if (!_role) {
-    return res.status(400).json({ msg: "error", err: "role incorect. use this: " + ACTORS_ROLE });
+
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, "role incorect utiliser: "+ACTORS_ROLE.toString()));
   }
+
+  const user = await userService.getById(userId);
+  if(!user?.send?.docs){
+
+    return utilsError.globalSatuts(res, user);
+  }
+
   schoolModel
     .findByIdAndUpdate(
       req.params.id,
@@ -223,103 +296,137 @@ module.exports.createSchoolActor = (req, res) => {
       },
       { new: true },
       (err, docs) => {
-        if (!err) res.status(200).json({ msg: "success",  docs: utilsTools.getCurrentObject(docs.actors) });
-        else
-          res
-            .status(500)
-            .json({ msg: "error", err: "Internal error or Actor no found" });
+        if (docs){
+
+          return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, utilsTools.getCurrentObject(docs.actors)));
+        }
+        else{
+          console.log("school_createSchoolActor_error =>", err)
+          return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR, null, "établissement"));
+        }
       }
     ).populate("actors.userId", ["userName", "firstName", "lastName", "number", "email"]);
 };
 
-//service
-module.exports.getSchoolOfUser = async (req, res) => {
-  if (!req.body.userId) {
-    return res.status(400).json({ msg: "error", err: "Data no complete" });
-  }
-  const userSchools = await schoolModel.find({
-    actors: {
-      $elemMatch: {
-        userId: req.body.userId,
-      },
-    },
-  })
-  return res.status(200).json({ msg: "success", docs: userSchools });
-};
+/****************************** libary management **********************************/
 
-//libary management
 module.exports.createLibrary = async (req, res) => {
-  if (Object.keys(req.body).length === 0)
-    return res.status(400).json({ msg: "error", err: "No data" });
-  // TODO control required variable
-  const { name } = req.body;
-  const type = "school";
-  const depth = 0;
-  const creatorId = req.params.id;
 
-  if (!name) {
-    return res.status(400).json({ msg: "error", err: "Data no complete" });
+  const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
   }
-  schoolModel.findById(creatorId, async (err, school) => {
-    if (err)
-      return res.status(500).json({ msg: "error", err: "Internal Error" });
-    if (!school)
-      return res.status(404).json({ msg: "error", err: "School no found" });
-    const library = school.library;
-    const d = {
-      ...req.body,
-      depth,
-      type,
-      creatorId,
-    };
-    const cd = await createDirectory(d);
-    if (cd?.send?.msg === "success") {
-      library.name = name;
-      library.documentId = cd?.send?.directory?._id;
-      school.save((err) => {
-        if (!err)
-          return res
-            .status(200)
-            .json({ msg: "success", school, docs : cd?.send?.directory });
-        return res.status(500).json({ msg: "error", err: err });
-      });
-    } else {
-      return res
-        .status(404)
-        .json({ msg: "error", err: "directory create error" });
+  
+  const { name, categorie } = req.body;
+
+  try {
+    if(!name ){
+      return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, "nom du dossier"));
     }
-  });
+  
+    const type = "school";
+  
+    const creatorId = req.params.id;
+  
+    schoolModel.findById(creatorId, async (err, school) => {
+  
+      if (err) {
+  
+          return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR, null, "établissement"));
+        }
+  
+      if (!school){
+  
+          return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement"));
+        }
+  
+      const library = school.library;
+  
+      const d = {
+        name,
+        type,
+        creatorId,
+        categorie
+      };
+      const cd = await createDirectory(d);
+  
+      if (cd?.send?.docs) {
+  
+        library.name = name;
+  
+        library.documentId = cd?.send?.docs?._id;
+  
+       const s = await school.save();
+
+          if (s){
+            
+            return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, cd?.send?.docs ));
+          }
+          const d = directorySchama.findByIdAndRemove(newDirectory);
+          return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR));
+
+      } else {
+
+        return utilsError.globalSatuts(res, cd);
+      }
+    });
+
+  } catch (error) {
+
+    console.log("school_createLibrary_error", error)
+    const d = directorySchama.findByIdAndRemove(newDirectory);
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR));
+  }
+  
 };
 
-module.exports.createLibraryFile = (req, res) => {
+module.exports.createLibraryFile = async (req, res) => {
+
+  const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
+  // TODO control required variable
+
   schoolModel.findById(req.params.id, async (err, school) => {
-    if (err)
-      return res.status(500).json({ msg: "error", err: "Internal Error" });
-    if (!school)
-      return res.status(404).json({ msg: "error", err: "School no found" });
+
+    if (!school){
+      return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement"));
+    }
+
     const library = school.library;
     const newSize = library.size + req?.body?.size;
+
     if (newSize > 200000000) {
-      return res
-        .status(406)
-        .json({ msg: "error", err: "Capacité de stockage gratuit attient" });
+
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR, null, "Capacité de stockage gratuit attient"));
     }
-    const cd = await createFile(req.body, req?.body?.creatorId);
-    if (cd?.send?.msg === "success") {
+
+    const fileCreateParams = {
+      ...req.body,
+      creatorId: school._id
+    }
+
+    const f = await createFile(fileCreateParams, req?.body?.directoryId);
+
+    if (f?.send?.docs) {
+
       library.size = newSize;
+
       school.save((err) => {
-        if (!err)
-          return res
-            .status(200)
-            .json({ msg: "success", school, docs: cd?.send?.directory });
-        return res.status(500).json({ msg: "error", err });
+        if (!err){
+
+          return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, f?.send?.docs));
+        }
+            
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR));
+
       });
     } else {
-      return res.status(404).json({
-        msg: "error",
-        err: "directory create error",
-        errorDetail: cd?.send?.err,
-      });
+
+      return utilsError.globalSatuts(res, f);
     }
   });
 };

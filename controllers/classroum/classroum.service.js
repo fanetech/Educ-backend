@@ -1,23 +1,26 @@
 const classroomModel = require("../../models/classroum.model");
 const { isEmpty } = require("../../utils/utils.tools");
 const schoolModel = require("../../models/school.model");
-const { PUPIL_ROLE, BOOL } = require("../../services/constant");
+const { PUPIL_ROLE, BOOL, STATUS_CODE } = require("../../services/constant");
 const { default: mongoose } = require("mongoose");
 const { classroomError } = require("../../utils/utils.errors");
 const utilsTools = require("../../utils/utils.tools")
 const schoolService = require('../school/school.services')
+const handleError = require('../../services/handleError')
+const userService = require('../user/user.service')
 
 module.exports.create = async (data) => {
 
   let schoolYear, school;
-  const _classroom = (await this.getByName(data.name))
-  if(_classroom?.send?.classroom){
-    return { send: { msg: "error", err: "name is exist" }, status: 404 };
+
+  const _classroom = await this.getByName(data.name)
+  if (_classroom) {
+    return handleError.errorConstructor(STATUS_CODE.DATA_EXIST, null, "nom de l'établissement");
   }
 
   try {
     const _school = await schoolService.getOne(data.schoolId);
-    if(!_school?.send?.docs){
+    if (!_school?.send?.docs) {
       return _school
     }
     school = _school?.send?.docs
@@ -30,11 +33,13 @@ module.exports.create = async (data) => {
 
   } catch (err) {
     console.log("classroom_create_get_school_error", err)
-    return { send: { msg: "error", err: "school no found" }, status: 404 };
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
   }
 
-  if (!schoolYear)
-    return { send: { msg: "error", err: "schoolYear is null" }, status: 404 };
+  if (!schoolYear) {
+
+    return handleError.errorConstructor(STATUS_CODE.NOT_DATA, null, "année scolaire");
+  }
 
   const session = await mongoose.startSession();
   session.startTransaction()
@@ -43,7 +48,7 @@ module.exports.create = async (data) => {
     const schoolDeadlines = schoolYear.deadlines;
     if (isEmpty(deadlines)) {
       if (isEmpty(schoolDeadlines)) {
-        return { send: { msg: "error", err: "deadlines no found in school year" }, status: 400 };
+        return handleError.errorConstructor(STATUS_CODE.NOT_DATA, null, "écheance de paiement");
       } else {
         let d = [];
         for (const sd of schoolDeadlines) {
@@ -63,60 +68,75 @@ module.exports.create = async (data) => {
         schoolId: data.schoolId,
         deadlines,
       },
+
     );
-    if (isEmpty(newClassroom))
-      return { send: { msg: "error", err: "Internal error" }, status: 500 };
+    if (isEmpty(newClassroom)) {
+
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+
     schoolYear.classroomIds.push(newClassroom._id);
+
     const s = await school.save();
+
     const classroom = await newClassroom.save(); // TODO delete if failled
+
     await session.commitTransaction();
     session.endSession()
+
     if (classroom) {
-      return { send: { msg: "success", docs: classroom }, status: 200 };
+
+      return handleError.errorConstructor(STATUS_CODE.SUCCESS, classroom);
+
     } else {
-      return { send: { msg: "error", err: "Internal error" }, status: 500 };
+
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+
     }
   } catch (err) {
     session.endSession()
     session.abortTransaction()
     console.log("classroom_create_error =>", err);
-    return { send: { msg: "error", err: classroomError(err) }, status: 500 };
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
   }
 }
 
 module.exports.getAll = async () => {
-  const classroums = await classroomModel.find().sort({ createdAt: -1 });
-  if (classroums) return { send: { msg: "success", docs: classroums }, status: 200 };
-  else return { send: { msg: "error", err: "Internal error" }, status: 500 };
+  const classrooms = await classroomModel.find().sort({ createdAt: -1 });
+  if (classrooms) return handleError.errorConstructor(STATUS_CODE.SUCCESS, classrooms);
+  else return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
 };
 
 // TODO
 module.exports.getOne = async (id) => {
   try {
-    if(!utilsTools.checkParams(id)){
-      return { send: { msg: "error", err: "internal error" }, status: 500 }; 
-  }
+    if (!utilsTools.checkParams(id)) {
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
+    }
+
     const classroom = await classroomModel.findById(id);
-    if (classroom) return { send: { msg: "success", docs: classroom }, status: 200 }
+    if (classroom) return handleError.errorConstructor(STATUS_CODE.SUCCESS, classroom)
+
     else {
-      return { send: { msg: "error", err: "Internal error" }, status: 404 };
+      throw handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
     }
   } catch (err) {
-    console.log(err);
-    return { send: { msg: "error", err: err }, status: 500 };
+    console.log("classroom_getOne_error", err);
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
   }
 };
 
 module.exports.getByName = async (name) => {
   try {
-    const classroom = await classroomModel.findOne({name: name});
-    if (classroom) return { send: { msg: "success", docs: classroom }, status: 200 };
+    const classroom = await classroomModel.findOne({ name: name });
+
+    if (classroom) return handleError.errorConstructor(STATUS_CODE.SUCCESS, classroom)
     else {
-      return { send: { msg: "error", err: "Internal error" }, status: 404 };
+      return null
     }
   } catch (err) {
     console.log(err);
-    return { send: { msg: "error", err: err }, status: 500 };
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
   }
 };
 
@@ -124,34 +144,34 @@ module.exports.note = async (id, pupilId, noteByPeriodId, data) => {
   try {
     const classroom = await classroomModel.findById(id);
     if (!classroom)
-      return { send: { msg: "error", err: "class no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement")
 
     const pupil = classroom.pupils.find((p) => p._id.equals(pupilId));
     if (!pupil)
-      return { send: { msg: "error", err: "pupil no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "élève")
 
     const noteByPeriod = pupil.notesByPeriod.find((n) => n._id.equals(noteByPeriodId));
     if (!noteByPeriod)
-      return { send: { msg: "error", err: "period no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "période")
 
     if (!getObjectValue(data.matterId, classroom.matters))
-      return { send: { msg: "error", err: "matter no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "matière")
 
     const m = noteByPeriod.notes.find(d => d.matterId === data.matterId)
     if (m)
-      return { send: { msg: "error", err: "matter existe" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.DATA_EXIST, null, "matière")
 
     noteByPeriod.notes.push(data);
 
     const c = await classroom.save();
     if (!c)
-      return { send: { msg: "error", err: "Internal error" }, status: 500 };
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
 
-    return { send: { msg: "success", docs: getCurrentObject(noteByPeriod.notes) }, status: 200 };
+    return handleError.errorConstructor(STATUS_CODE.SUCCESS, c)
 
   } catch (err) {
     console.log(err);
-    return { send: { msg: "error", err: "Internal error" }, status: 500 };
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
   }
 };
 
@@ -160,22 +180,22 @@ module.exports.matter = async (id, data) => {
     const classroom = await (await this.getOne(id)).send.docs;
 
     if (!classroom)
-      return { send: { msg: "error", err: "class no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe")
 
-    const checkName = classroom.matters.find(m => m.name.toLowerCase() === data?.name.toLowerCase())
+    const checkName = checkMatter(classroom.matters, data?.name)
     if (checkName)
-      return { send: { msg: "error", err: "name existe" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.DATA_EXIST, null, "nom de la matière")
 
     classroom.matters.push(data);
     const c = await classroom.save();
 
     if (!c)
-      return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", docs: getCurrentObject(classroom.matters) }, status: 200 };
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
+    return handleError.errorConstructor(STATUS_CODE.SUCCESS, getCurrentObject(classroom.matters))
 
   } catch (err) {
     console.log("classroom_matter_error =>", err);
-    return { send: { msg: "error", err: "Internal error" }, status: 500 };
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
   }
 };
 
@@ -184,20 +204,22 @@ module.exports.absence = async (id, data) => {
     const classroom = (await this.getOne(id)).send.docs;
 
     if (!classroom)
-      return { send: { msg: "error", err: "class no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe")
 
     const absences = classroom.absences;
 
     absences.push(data)
     const a = await classroom.save();
 
-    if (!a)
-      return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", docs: getCurrentObject(classroom.absences) }, status: 200 };
+    if (!a) {
+
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
+    }
+    return handleError.errorConstructor(STATUS_CODE.SUCCESS, getCurrentObject(classroom.absences))
 
   } catch (error) {
     console.log("classroom_absence_error =>", error);
-    return { send: { msg: "error", err: "Internal error" }, status: 500 };
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
   }
 }
 module.exports.addAbsence = async (id, data) => {
@@ -205,11 +227,11 @@ module.exports.addAbsence = async (id, data) => {
     const classroom = (await this.getOne(id)).send.docs;
 
     if (!classroom)
-      return { send: { msg: "error", err: "class no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
 
     const absence = getObjectValue(data.absenceId, classroom.absences);
     if (!absence)
-      return { send: { msg: "error", err: "absence no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "absence")
 
     let pupils = absence.pupils;
     for (const p of data.pupils) {
@@ -217,32 +239,38 @@ module.exports.addAbsence = async (id, data) => {
     }
     const a = await classroom.save();
 
-    if (!a)
-      return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", docs: getObjectValue(data.absenceId, classroom.absences) }, status: 200 };
+    if (!a) {
+
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
+    }
+
+    return handleError.errorConstructor(STATUS_CODE.SUCCESS, getObjectValue(data.absenceId, classroom.absences))
 
   } catch (error) {
+
     console.log("classroom_add_absence_error =>", error);
-    return { send: { msg: "error", err: "Internal error" }, status: 500 };
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
   }
 }
 
 module.exports.pupil = async (id, data) => {
   try {
     const classroom = await (await this.getOne(id)).send.docs;
-    classroom.totalPupil = classroom.totalPupil + 1
+    if (!classroom) {
 
-    if (classroom.status === "error")
-      return { send: { msg: "error", err: "class no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe")
+    }
+
+    classroom.totalPupil = classroom.totalPupil + 1
 
     const matters = classroom?.matters;
     if (isEmpty(matters))
-      return { send: { msg: "error", err: "Matter is null" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "matière");
 
     if (data.role) {
       const _role = PUPIL_ROLE.find(ar => ar === data.role)
       if (!_role) {
-        return { send: { msg: "error", err: "role incorect. use this: " + PUPIL_ROLE }, status: 400 };
+        return handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, "role incorect, utiliser " + PUPIL_ROLE.toString());
       }
     }
 
@@ -255,8 +283,10 @@ module.exports.pupil = async (id, data) => {
     }
     const periods = currentSchoolYear.periods;
 
-    if (isEmpty(periods))
-      return { send: { msg: "error", err: "Period is null in school" }, status: 404 };
+    if (isEmpty(periods)) {
+
+      return handleError.errorConstructor(STATUS_CODE.NOT_DATA, null, "aucune periode dans votre établissement");
+    }
 
     let notesByPeriod = [];
 
@@ -278,13 +308,16 @@ module.exports.pupil = async (id, data) => {
     pupil.push(d);
     const c = await classroom.save();
 
-    if (!c)
-      return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", docs: getCurrentObject(c.pupils) }, status: 200 };
+    if (!c) {
+
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+
+    return handleError.errorConstructor(STATUS_CODE.SUCCESS, getCurrentObject(c.pupils));
 
   } catch (err) {
     console.log(err);
-    return { send: { msg: "error", err: "Internal error" }, status: 500 };
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
   }
 };
 
@@ -293,18 +326,30 @@ module.exports.update = async (id, data) => {
     let schoolYear, school;
     const classroom = (await this.getOne(id)).send.docs;
     if (!classroom)
-      return { send: { msg: "error", err: "classroom no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe");
 
-    if (data?.name)
+    if (data?.name) {
+
       classroom.name = data.name
+    }
 
-    if (data?.principalId)
+    if (data?.principalId) {
+
+      const user = (await userService.getById(data.principalId))?.send?.docs
+      if(!user){
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "utilisateur");
+      }
+
       classroom.principalId = data.principalId
+    }
 
     if (data?.totalPrice) {
       classroom.totalPrice = data.totalPrice
       let deadlines = classroom.deadlines
-      school = await schoolModel.findById(classroom.schoolId); // TODO create service to school
+      school = (await schoolService.getOne(classroom.schoolId))?.send?.docs;
+      if (!school) {
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement")
+      }
 
       if (data.schoolYearsId) {
         schoolYear = school.schoolYears.find((d) => d._id.equals(data.schoolYearsId));
@@ -321,15 +366,18 @@ module.exports.update = async (id, data) => {
     if (data.matterId) {
       const matter = classroom.matters.find((m) => m._id.equals(data.matterId));
       if (!matter)
-        return { send: { msg: "error", err: "matter no found" }, status: 404 };
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "matière");
 
       if (data.matterName) matter.name = data.matterName;
 
       if (data.matterCoef) matter.coef = data.matterCoef;
 
       if (data.matterTeacherId) {
-        if (!getObjectValue(data.matterTeacherId, school.actors))
-          return { send: { msg: "error", err: "matterTeacher no exist in school actor" }, status: 404 };
+        if (!getObjectValue(data.matterTeacherId, school.actors)) {
+
+          return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "l'établissement ne contient pas de professeur pour cette matière")
+        }
+
         matter.teacherId = data.matterTeacherId;
       }
 
@@ -338,24 +386,65 @@ module.exports.update = async (id, data) => {
 
     const c = await classroom.save();
     if (!c)
-      return { send: { msg: "error", err: "Internal error" }, status: 500 };
-    return { send: { msg: "success", docs: c }, status: 200 };
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    return handleError.errorConstructor(STATUS_CODE.SUCCESS, c);
 
   } catch (error) {
     console.log("classroom_update error =>", error);
-    return { send: { msg: "error", err: "Internal error" }, status: 500 };
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
   }
+}
+
+module.exports.updateMatter = async (id, data) => {
+
+  const classroom = (await this.getOne(id)).send.docs;
+    if (!classroom)
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe");
+
+    const matter = classroom.matters.find((m) => m._id.equals(data.matterId));
+    if (!matter)
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "matière");
+
+    if (data.name){
+      const checkName = checkMatter(classroom.matters, data.name)
+      if(checkName){
+        return handleError.errorConstructor(STATUS_CODE.DATA_EXIST, null, "nom de matière");
+      }
+      matter.name = data.name;
+    } 
+
+    if (data.coef) matter.coef = data.coef;
+
+    if (data.teacherId) {
+
+      const school = (await schoolService.getOne(classroom.schoolId))?.send?.docs;
+      if (!school) {
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement")
+      }
+
+      if (!getObjectValue(data.teacherId, school.actors)) {
+
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "l'établissement ne contient pas de professeur pour cette matière")
+      }
+
+      matter.teacherId = data.teacherId;
+    }
+
+    if (data.horaire) matter.horaire = data.horaire;
+
+    return handleError.errorConstructor(STATUS_CODE.SUCCESS, matter);
 }
 
 module.exports.updatePupil = async (id, data) => {
   try {
     const classroom = (await this.getOne(id)).send.docs;
     if (!classroom)
-      return { send: { msg: "error", err: "classroom no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe");
+
     const pupil = getObjectValue(data.pupilId, classroom.pupils);
 
     if (!pupil)
-      return { send: { msg: "error", err: "pupil no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "élève");
 
     if (data.lastname)
       pupil.lastname = data.lastname
@@ -390,8 +479,9 @@ module.exports.updatePupil = async (id, data) => {
     if (data.role) {
       const _role = PUPIL_ROLE.find(ar => ar === data.role)
       if (!_role) {
-        return { send: { msg: "error", err: "role incorect. use this: " + PUPIL_ROLE }, status: 400 };
+        return handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, "role incorect. utiliser "+PUPIL_ROLE.toString());
       }
+
       pupil.role = data.role
     }
 
@@ -399,25 +489,34 @@ module.exports.updatePupil = async (id, data) => {
       const noteByPeriod = getObjectValue(data.noteByPeriodId, pupil.notesByPeriod)
 
       if (!noteByPeriod)
-        return { send: { msg: "error", err: "noteByPeriod no found" }, status: 404 };
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "note de periode");
 
       const note = getObjectValue(data.noteId, noteByPeriod.notes)
       if (!note)
-        return { send: { msg: "error", err: "noteByPeriod no found" }, status: 404 };
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "note");
+
       if (data.noteValue) note.value = data.noteValue
-      if (data.noteMatterId) note.matterId = data.noteMatterId
+
+      if (data.noteMatterId){
+        const matter = getObjectValue(data.noteMatterId, classroom.matters);
+        if (!matter)
+          return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "matière");
+
+         note.matterId = data.noteMatterId 
+      } 
+
     }
 
     const c = await classroom.save();
 
     if (!c)
-      return { send: { msg: "error", err: "Internal error" }, status: 500 };
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
 
-    return { send: { msg: "success", docs: pupil }, status: 200 };
+    return handleError.errorConstructor(STATUS_CODE.SUCCESS, pupil);
 
   } catch (error) {
     console.log("classroom_updatePupil error =>", error);
-    return { send: { msg: "error", err: "Internal error" }, status: 500 };
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
   }
 }
 
@@ -426,11 +525,11 @@ module.exports.updateAbsence = async (id, data) => {
     let pupil
     const classroom = (await this.getOne(id)).send.docs;
     if (!classroom)
-      return { send: { msg: "error", err: "classroom no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe");
 
     const absence = getObjectValue(data.absenceId, classroom.absences);
     if (!absence)
-      return { send: { msg: "error", err: "absence no found" }, status: 404 };
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "absence");
 
     if (data.date)
       absence.date = data.date;
@@ -441,7 +540,7 @@ module.exports.updateAbsence = async (id, data) => {
     if (data.reason || data.justify != null) {
       pupil = getObjectValue(data.pupilId, absence.pupils);
       if (!pupil)
-        return { send: { msg: "error", err: "pupil no found" }, status: 404 };
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "élève");
 
       if (data.reason)
         pupil.reason = data.reason
@@ -449,7 +548,7 @@ module.exports.updateAbsence = async (id, data) => {
       if (data.justify != null) {
         const _justify = BOOL.find(b => b === data.justify)
         if (!_justify) {
-          return { send: { msg: "error", err: "error", err: "boolean incorect. use this: " + BOOL }, status: 500 };
+          return handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, "boolean incorect. utiliser " + BOOL);
         }
         pupil.justify = data.justify
       }
@@ -458,13 +557,14 @@ module.exports.updateAbsence = async (id, data) => {
     const c = await classroom.save();
 
     if (!c)
-      return { send: { msg: "error", err: "Internal error" }, status: 500 };
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
 
-    return { send: { msg: "success", docs: absence }, status: 200 };
+    return handleError.errorConstructor(STATUS_CODE.SUCCESS, absence);
 
   } catch (error) {
+
     console.log("classroom_updateAbsence error =>", error);
-    return { send: { msg: "error", err: "Internal error" }, status: 500 };
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
   }
 
 
@@ -477,6 +577,10 @@ const getObjectValue = (id, object) => {
 
 const getCurrentObject = (array) => {
   if (isEmpty(array))
-    return { send: { msg: "error", err: "array is null" }, status: 404 };
+    return null;
   return array[array.length - 1];
 };
+
+const checkMatter = (matters, name) => {
+ return matters.find(m => m.name.toLowerCase() === name.toLowerCase())
+}

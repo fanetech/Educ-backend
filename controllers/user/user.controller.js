@@ -1,8 +1,9 @@
 const userModel = require("../../models/user.model");
-const ObjectId = require("mongoose").Types.ObjectId;
 const userService = require('./user.service')
 const utilsError  = require('../../utils/utils.errors');
-const { USER_ROLE } = require("../../services/constant");
+const utilsTools  = require('../../utils/utils.tools');
+const { USER_ROLE, STATUS_CODE } = require("../../services/constant");
+const handleError = require("../../services/handleError")
 
 module.exports.getUserById = async (req, res) => {
   
@@ -16,22 +17,21 @@ module.exports.getAllUser = (req, res) => {
   userModel
     .find((err, users) => {
       if (!err) {
-        return res.status(200).json({ msg: "success", docs: users });
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, users));
       } else {
-        return res.status(500).json({ msg: "error", err: "Internal error" });
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR));
       }
     })
     .select({ password: false });
 };
 
-module.exports.updateUser = (req, res) => {
-  const id = req?.params?.id;
-  if (!ObjectId.isValid(id)) {
-    return res.status(404).json({ msg: "error", err: "User no found" });
-  }
+module.exports.updateUser = async (req, res) => {
+  const reqAnalityc = utilsTools.checkRequest(req)
 
-  if (Object.keys(req.body).length === 0)
-    return res.status(400).json({ msg: "error", err: "No data" });
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
+  const id = req?.params?.id;
 
   const {
     userName,
@@ -46,8 +46,10 @@ module.exports.updateUser = (req, res) => {
     schoolId,
   } = req.body;
   userModel.findById(id, (err, user) => {
+
     if (!user) {
-      return res.status(404).json({ msg: "error", err: "User no found" });
+
+      return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR, null, "utilisateur non trouvé"));
     }
     if (
       userName ||
@@ -59,35 +61,52 @@ module.exports.updateUser = (req, res) => {
       email
     ) {
       if (userName) user.userName = userName;
+
       if (firstName) user.firstName = firstName;
+
       if (lastName) user.lastName = lastName;
+
       if (role){
         const _role = USER_ROLE[role]
+
         if (!_role) {
-          return res.status(400).json({ msg: "error", err: "role incorect" });
+
+          return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, "role incorect utiliser: "+Object.values(USER_ROLE).toString()));
         }
+
         user.role = role;
       } 
       if (adress) user.adress = adress;
+
       if (number) user.number = number;
+
       if (email) user.email = email;
     }
     if (schoolRole || status != null) {
+
       const theSchool = user.school.find((school) =>
         school._id.equals(schoolId)
       );
       if (!theSchool) {
-        return res.status(404).json({ msg: "error", err: "School no found" });
+
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement"));
       }
+
       if (schoolRole) theSchool.role = schoolRole;
+
       if (status != null) theSchool.status = status;
+
     }
     return user.save((err) => {
+      
       if (!err) {
-        return res.status(200).json({ msg: "success", docs: user });
+        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, user));
       }
-      console.log("user.Controller error == ",err);
-      return res.status(500).json({ msg: "error", err: "Internal error" });
+
+      console.log("user_update_error => ", err);
+
+      const errors = utilsError.signUpErrors(err);
+        return utilsError.globalSatuts(res, errors);     
     });
   });
 };
@@ -96,9 +115,9 @@ module.exports.remove = async (req, res) => {
   const id = req.params.id;
   userModel.findByIdAndRemove(id, (err, user) => {
     if (err)
-      return res.status(500).json({ msg: "error", err: "Internal error" });
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR));
     if (!user)
-      return res.status(404).json({ msg: "error", err: "user no found" });
-    res.status(200).json({ msg: "success" });
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "utilisateur"));
+    return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, "ok"));
   });
 };

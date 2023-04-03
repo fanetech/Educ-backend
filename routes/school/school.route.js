@@ -7,7 +7,6 @@ router.post("/", schoolController.create);
 router.get("/", schoolController.getAll);
 router.get("/user", schoolController.getSchoolOfUser);
 router.get("/:id", schoolController.getOne);
-router.put("/:id", schoolController.update);
 router.delete("/:id", schoolController.remove);
 router.delete("/soft/:id", schoolController.softDelete);
 
