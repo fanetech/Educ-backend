@@ -11,6 +11,7 @@ router.post("/note/:id", classroumController.note);
 router.post("/absence/:id", classroumController.absence);
 router.post("/add-absence/:id", classroumController.addAbsence);
 router.put("/:id", classroumController.update);
+router.put("/matter/:id", classroumController.updateMatter);
 router.put("/pupil/:id", classroumController.updatePupil);
 router.put("/absence/:id", classroumController.updateAbsence);
 module.exports = router;

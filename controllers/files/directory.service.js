@@ -1,13 +1,10 @@
 const directorySchama = require("../../models/directory.model");
+const { STATUS_CODE } = require("../../services/constant");
+const handleError = require("../../services/handleError")
+const utilsTools = require("../../utils/utils.tools")
 
 
 module.exports.createDirectory = async (directory) => {
-  let res = { send: null, status: null };
-  if (Object.keys(directory).length === 0) {
-    res.send = { msg: "error", err: "No data" };
-    res.status = 500;
-    return res;
-  }
   let {
     name,
     type,
@@ -18,7 +15,13 @@ module.exports.createDirectory = async (directory) => {
     directoryId,
     depth,
   } = directory;
+
+  if(!name || !type || !creatorId || !categorie){
+    return handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, "nom, type, catégorie ou le createur");
+  }
+
   let newDirectory;
+
   try {
     newDirectory = await directorySchama.create({
       name,
@@ -30,55 +33,51 @@ module.exports.createDirectory = async (directory) => {
       depth,
     });
   } catch (errorDetail) {
-    res.send = { msg: "error", err: "Internal error", errorDetail };
-    res.status = 500;
-    return res;
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
   }
   if (directoryId) {
     try {
       const racineDir = await directorySchama.findById(directoryId);
       if (racineDir) {
+
         racineDir.directoryId.push(newDirectory._id);
         const racineIrUpdate = await racineDir.save();
-        if (!racineIrUpdate._id)
-          throw "Internal error. Racine directory not save";
-        res.send = { msg: "success", directory: newDirectory };
-        res.status = 200;
-        return res;
+
+        if (!racineIrUpdate._id){
+
+          return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+        }
+
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, newDirectory);
+
       } else {
-        throw "Directory no found";
+
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "Dossier");
       }
     } catch (errorDetail) {
+      
       const d = directorySchama.findByIdAndRemove(newDirectory);
-      res.send = { msg: "error", err: "internal error", errorDetail };
-      res.status = 500;
-      return res;
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
     }
   } else {
-    res.send = { msg: "success", directory: newDirectory };
-    res.status = 200;
-    return res;
+    return handleError.errorConstructor(STATUS_CODE.SUCCESS, newDirectory);
   }
 };
 
 module.exports.createFile = async (file, directoryId) => {
-  let res = { send: null, status: null };
-  if (Object.keys(file).length === 0) {
-    res.send = { msg: "error", err: "No data" };
-    res.status = 500;
-    return res;
+
+  try {
+    const { name, description, categorie, size, path, creatorId } = file;
+
+  if (!name || !categorie || !size || !path || !creatorId || !directoryId) {
+
+    return handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, "nom, description, catégorie,...");
   }
-  const { name, description, categorie, size, path } = file;
-  if (!name || !categorie || !size || !path) {
-    res.send = { msg: "error", err: "Data no complete" };
-    res.status = 400;
-    return res;
-  }
+
   const directory = await directorySchama.findById(directoryId);
   if (!directory) {
-    res.send = { msg: "error", err: "Directory no found" };
-    res.status = 404;
-    return res;
+
+    return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "Dossier");
   }
   directory.files.push({
     name,
@@ -86,14 +85,23 @@ module.exports.createFile = async (file, directoryId) => {
     categorie,
     size,
     path,
+    creatorId
   });
+
   const directoryUpdate = await directory.save();
+
   if (directoryUpdate) {
-    res.send = { msg: "success", directory };
-    res.status = 200;
-    return res;
+
+   return handleError.errorConstructor(STATUS_CODE.SUCCESS, utilsTools.getCurrentObject(directory.files));
   }
-  res.send = { msg: "error", err: "Internal error" };
-  res.status = 500;
-  return res;
+
+  return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    
+  } catch (error) {
+    
+    console.log("directory_service_createFile_error =>", error)
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+  }
+
+  
 };

@@ -1,19 +1,21 @@
 const userModel = require("../../models/user.model");
+const { STATUS_CODE } = require("../../services/constant");
 const utilsTools = require('../../utils/utils.tools')
+const handleError = require('../../services/handleError')
 
 
 module.exports.getById = async (id) => {
     
     if(!utilsTools.checkParams(id)){
-        return { send: { msg: "error", err: "internal error" }, status: 500 }; 
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR); 
     }
     const user = await userModel
         .findById(id)
         .select({ password: false });
 
     if (!user) {
-        return { send: { msg: "error", err: "user no found" }, status: 404 };
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "utilisateur");
     }
 
-    return { send: { msg: "success", docs: user }, status: 200 };
+    return handleError.errorConstructor(STATUS_CODE.SUCCESS, user);
 }

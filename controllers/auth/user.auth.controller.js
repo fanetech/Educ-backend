@@ -1,9 +1,11 @@
 const userModel = require("../../models/user.model");
 const jwt = require("jsonwebtoken");
-const { signUpErrors, signInErrors } = require("../../utils/utils.errors");
+const { signUpErrors, signInErrors, globalSatuts } = require("../../utils/utils.errors");
 const { getSchoolOfUser } = require("../school/school.controller");
 const bcrypt = require("bcrypt");
-const { USER_ROLE } = require("../../services/constant");
+const { USER_ROLE, STATUS_CODE } = require("../../services/constant");
+const handleError = require("../../services/handleError")
+const utilsTools = require("../../utils/utils.tools")
 
 const maxAge = 3 * 24 * 60 * 60 * 1000;
 const createToken = (id) => {
@@ -13,11 +15,18 @@ const createToken = (id) => {
 };
 
 module.exports.login = async (req, res) => {
-  if (Object.keys(req.body).length === 0)
-    return res.status(400).json({ msg: "error", err: "No data" });
+
+    const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+
+    return globalSatuts(res, reqAnalityc)
+  }
+
   const { password, method } = req.body;
   if (!password || !method)
-    return res.status(400).json({ msg: "error", err: "data no complete" });
+  return globalSatuts(res, handleError.errorConstructor(STATUS_CODE.NOT_DATA, null, "identifiants"));
+
   try {
     const user = await userModel.findOne({
       $or: [
@@ -34,33 +43,44 @@ module.exports.login = async (req, res) => {
       const auth = await bcrypt.compare(password, user.password);
 
       if (!auth) {
-        throw Error("incorrect password");
+        return globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, "identifiants"));
       }
     } else {
-      throw Error("incorrect email or number ");
+      return globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, "identifiants"));
     }
-    delete user["password"];
+
     const token = createToken(user._id);
-    res.status(200).json({ msg: "success", docs: user, token: token });
+    const d = {user, token}
+    return globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, d));
+
   } catch (err) {
-    const errors = signInErrors(err);
+
     console.log(err);
-    res.status(500).json({ msg: "error", errors });
+    return globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR));
   }
 };
 
 module.exports.register = async (req, res) => {
-  if (Object.keys(req.body).length === 0)
-    return res.status(400).json({ msg: "error", err: "No data" });
+
+  const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+
+    return globalSatuts(res, reqAnalityc)
+  }
 
   const { number, email, password, role } = req.body;
   if ((!number || !email) && !password && !role) {
-    return res.status(400).json({ msg: "error", err: "data no complete" });
+    return globalSatuts(res, handleError.errorConstructor(STATUS_CODE.NOT_DATA, null, "identifiants"));
+  }
+
+  if(password.length < 8){
+    return globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, "mot de passe court"));
   }
 
   const _role = USER_ROLE[role]
   if (!_role) {
-    return res.status(400).json({ msg: "error", err: "role incorect" });
+    return globalSatuts(res, handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, "role incorect. utiliser "+ Object.values(USER_ROLE).toString()));
   }
     
   //crypt password
@@ -74,9 +94,9 @@ module.exports.register = async (req, res) => {
       password: hashPassword,
       role
     });
-    res.status(200).json({ msg: "success", docs: user });
+    return globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, user));
   } catch (err) {
     const errors = signUpErrors(err);
-    res.status(500).json({ msg: "error", errors });
+    return globalSatuts(res, errors)
   }
 };
