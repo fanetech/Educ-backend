@@ -11,8 +11,17 @@ const classroomSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    principalId: {
-      type: String,
+    teachers: {
+      type: [
+        {
+          teacherId: String,
+          isPrincipal: {
+            type: Boolean,
+            default: false
+          }
+
+        }
+      ],
     },
     totalPupil: {
       type: Number,

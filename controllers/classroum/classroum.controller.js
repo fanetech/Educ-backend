@@ -4,7 +4,8 @@ const schoolModel = require("../../models/school.model");
 const classroumService = require("./classroum.service");
 const { globalSatuts } = require("../../utils/utils.errors");
 const { isEmpty } = require("../../utils/utils.tools");
-const connectDB = require("../../config/db");
+const utilsTools = require("../../utils/utils.tools")
+const utilsError = require("../../utils/utils.errors")
 
 module.exports.create = async (req, res) => {
   if (Object.keys(req.body).length === 0)
@@ -39,6 +40,19 @@ module.exports.matter = async (req, res) => {
   const data = { name, coef, teacherId, horaire };
   const response = await classroumService.matter(req.params.id, data);
   return await globalSatuts(res, response);
+};
+
+module.exports.teacher = async (req, res) => {
+
+  const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
+
+  const response = await classroumService.teacher(req.params.id, req.body)
+
+  return await utilsError.globalSatuts(res, response)
 };
 
 module.exports.absence = async (req, res) => {
@@ -130,6 +144,18 @@ module.exports.updateMatter = async (req, res) => {
     return res.status(400).json({ msg: "error", err: "No data" });
 
   const data = await classroumService.updateMatter(req.params.id, req.body)
+  return await globalSatuts(res, data);
+}
+
+module.exports.updateTeacher = async (req, res) => {
+
+  const reqAnalityc = utilsTools.checkRequest(req)
+
+  if(reqAnalityc !== 1){
+    return await utilsError.globalSatuts(res, reqAnalityc)
+  }
+
+  const data = await classroumService.updateTeacher(req.params.id, req.body)
   return await globalSatuts(res, data);
 }
 

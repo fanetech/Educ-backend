@@ -107,7 +107,6 @@ module.exports.getAll = async () => {
   else return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
 };
 
-// TODO
 module.exports.getOne = async (id) => {
   try {
     if (!utilsTools.checkParams(id)) {
@@ -157,17 +156,13 @@ module.exports.note = async (id, pupilId, noteByPeriodId, data) => {
     if (!getObjectValue(data.matterId, classroom.matters))
       return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "matière")
 
-    const m = noteByPeriod.notes.find(d => d.matterId === data.matterId)
-    if (m)
-      return handleError.errorConstructor(STATUS_CODE.DATA_EXIST, null, "matière")
-
     noteByPeriod.notes.push(data);
 
     const c = await classroom.save();
     if (!c)
       return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
 
-    return handleError.errorConstructor(STATUS_CODE.SUCCESS, c)
+    return handleError.errorConstructor(STATUS_CODE.SUCCESS, getCurrentObject(noteByPeriod.notes))
 
   } catch (err) {
     console.log(err);
@@ -198,6 +193,56 @@ module.exports.matter = async (id, data) => {
     return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
   }
 };
+
+module.exports.teacher = async (id, data) => {
+
+  try {
+
+    const { teacherId } = data
+
+    if (!teacherId) {
+      return handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, "professeur")
+    }
+
+    const classroom = await (await this.getOne(id)).send.docs;
+
+    if (!classroom) {
+
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe")
+    }
+
+    const school = await (await schoolService.getOne(classroom.schoolId)).send.docs
+
+    if (!school) {
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement")
+    }
+
+    if (!getObjectValue(teacherId, school.actors)) {
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "ce professeur n'existe pas dans l'établissement")
+    }
+
+    const teacher = classroom.teachers.find(t => t.teacherId === teacherId)
+    if (teacher) {
+      return handleError.errorConstructor(STATUS_CODE.DATA_EXIST, null, "ce professeur existe déjà dans la classe")
+    }
+
+    const d = {
+      teacherId,
+      isPincipal: data.isPincipal
+    }
+
+    classroom.teachers.push(d);
+
+    const c = await utilsTools.save(classroom, getCurrentObject(classroom.teachers))
+
+    return c;
+
+  } catch (error) {
+
+    console.log("classroom_service_teacher_error =>", error)
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
+  }
+}
 
 module.exports.absence = async (id, data) => {
   try {
@@ -329,31 +374,41 @@ module.exports.update = async (id, data) => {
       return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe");
 
     if (data?.name) {
+      const _classroom = await this.getByName(data.name)
+      if (_classroom) {
+        return handleError.errorConstructor(STATUS_CODE.DATA_EXIST, null, "nom de l'établissement");
+      }
 
       classroom.name = data.name
     }
 
     if (data?.principalId) {
 
-      const user = (await userService.getById(data.principalId))?.send?.docs
-      if(!user){
-        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "utilisateur");
+      const school = (await schoolService.getOne(classroom.schoolId))?.send?.docs
+      if (!getObjectValue(data.principalId, school.actors)) {
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "utilisateur n'existe pas dans le personnel");
       }
 
       classroom.principalId = data.principalId
     }
 
     if (data?.totalPrice) {
+
       classroom.totalPrice = data.totalPrice
+
       let deadlines = classroom.deadlines
+
       school = (await schoolService.getOne(classroom.schoolId))?.send?.docs;
+
       if (!school) {
         return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement")
       }
 
       if (data.schoolYearsId) {
+
         schoolYear = school.schoolYears.find((d) => d._id.equals(data.schoolYearsId));
       } else {
+
         const sy = school.schoolYears
         schoolYear = sy[sy.length - 1]
       }
@@ -398,41 +453,41 @@ module.exports.update = async (id, data) => {
 module.exports.updateMatter = async (id, data) => {
 
   const classroom = (await this.getOne(id)).send.docs;
-    if (!classroom)
-      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe");
+  if (!classroom)
+    return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe");
 
-    const matter = classroom.matters.find((m) => m._id.equals(data.matterId));
-    if (!matter)
-      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "matière");
+  const matter = classroom.matters.find((m) => m._id.equals(data.matterId));
+  if (!matter)
+    return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "matière");
 
-    if (data.name){
-      const checkName = checkMatter(classroom.matters, data.name)
-      if(checkName){
-        return handleError.errorConstructor(STATUS_CODE.DATA_EXIST, null, "nom de matière");
-      }
-      matter.name = data.name;
-    } 
+  if (data.name) {
+    const checkName = checkMatter(classroom.matters, data.name)
+    if (checkName) {
+      return handleError.errorConstructor(STATUS_CODE.DATA_EXIST, null, "nom de matière");
+    }
+    matter.name = data.name;
+  }
 
-    if (data.coef) matter.coef = data.coef;
+  if (data.coef) matter.coef = data.coef;
 
-    if (data.teacherId) {
+  if (data.teacherId) {
 
-      const school = (await schoolService.getOne(classroom.schoolId))?.send?.docs;
-      if (!school) {
-        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement")
-      }
-
-      if (!getObjectValue(data.teacherId, school.actors)) {
-
-        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "l'établissement ne contient pas de professeur pour cette matière")
-      }
-
-      matter.teacherId = data.teacherId;
+    const school = (await schoolService.getOne(classroom.schoolId))?.send?.docs;
+    if (!school) {
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement")
     }
 
-    if (data.horaire) matter.horaire = data.horaire;
+    if (!getObjectValue(data.teacherId, school.actors)) {
 
-    return handleError.errorConstructor(STATUS_CODE.SUCCESS, matter);
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "l'établissement ne contient pas de professeur pour cette matière")
+    }
+
+    matter.teacherId = data.teacherId;
+  }
+
+  if (data.horaire) matter.horaire = data.horaire;
+
+  return handleError.errorConstructor(STATUS_CODE.SUCCESS, matter);
 }
 
 module.exports.updatePupil = async (id, data) => {
@@ -479,7 +534,7 @@ module.exports.updatePupil = async (id, data) => {
     if (data.role) {
       const _role = PUPIL_ROLE.find(ar => ar === data.role)
       if (!_role) {
-        return handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, "role incorect. utiliser "+PUPIL_ROLE.toString());
+        return handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, "role incorect. utiliser " + PUPIL_ROLE.toString());
       }
 
       pupil.role = data.role
@@ -497,13 +552,13 @@ module.exports.updatePupil = async (id, data) => {
 
       if (data.noteValue) note.value = data.noteValue
 
-      if (data.noteMatterId){
+      if (data.noteMatterId) {
         const matter = getObjectValue(data.noteMatterId, classroom.matters);
         if (!matter)
           return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "matière");
 
-         note.matterId = data.noteMatterId 
-      } 
+        note.matterId = data.noteMatterId
+      }
 
     }
 
@@ -570,6 +625,58 @@ module.exports.updateAbsence = async (id, data) => {
 
 }
 
+module.exports.updateTeacher = async (id, data) => {
+  try {
+
+    const { teacherId, isPrincipal, classroomTeacherId } = data
+
+    const classroom = (await this.getOne(id)).send.docs;
+    if (!classroom) {
+
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe");
+    }
+
+    const theTeacher = getObjectValue(classroomTeacherId, classroom.teachers)
+    if (!theTeacher) {
+
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "ce professeur n'existe pas dans la liste des professeurs de la classe");
+    }
+
+    if (teacherId) {
+
+      const teacher = classroom.teachers.find(t => t.teacherId === teacherId)
+
+      if (teacher) {
+        return handleError.errorConstructor(STATUS_CODE.DATA_EXIST, null, "ce professeur existe déjà dans la classe")
+      }
+
+      const school = await (await schoolService.getOne(classroom.schoolId)).send.docs
+
+      if (!school) {
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement")
+      }
+
+      if (!getObjectValue(teacherId, school.actors)) {
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "ce professeur n'existe pas dans l'établissement")
+      }
+
+      theTeacher.teacherId = teacherId;
+
+    }
+
+    if (isPrincipal !== null) {
+      theTeacher.isPrincipal = isPrincipal
+    }
+
+    return await utilsTools.save(classroom, theTeacher)
+
+  } catch (error) {
+    console.log("classroum_service_updateTeacher_error =>", error)
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+  }
+
+}
+
 const getObjectValue = (id, object) => {
   const d = object.find(d => d._id.equals(id))
   return d
@@ -582,5 +689,5 @@ const getCurrentObject = (array) => {
 };
 
 const checkMatter = (matters, name) => {
- return matters.find(m => m.name.toLowerCase() === name.toLowerCase())
+  return matters.find(m => m.name.toLowerCase() === name.toLowerCase())
 }
