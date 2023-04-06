@@ -15,7 +15,7 @@ const classroomSchema = mongoose.Schema(
       type: [
         {
           teacherId: String,
-          isPincipal: {
+          isPrincipal: {
             type: Boolean,
             default: false
           }

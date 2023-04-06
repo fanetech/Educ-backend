@@ -107,7 +107,6 @@ module.exports.getAll = async () => {
   else return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
 };
 
-// TODO
 module.exports.getOne = async (id) => {
   try {
     if (!utilsTools.checkParams(id)) {
@@ -194,6 +193,56 @@ module.exports.matter = async (id, data) => {
     return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
   }
 };
+
+module.exports.teacher = async (id, data) => {
+
+  try {
+
+    const { teacherId } = data
+
+    if (!teacherId) {
+      return handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, "professeur")
+    }
+
+    const classroom = await (await this.getOne(id)).send.docs;
+
+    if (!classroom) {
+
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe")
+    }
+
+    const school = await (await schoolService.getOne(classroom.schoolId)).send.docs
+
+    if (!school) {
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement")
+    }
+
+    if (!getObjectValue(teacherId, school.actors)) {
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "ce professeur n'existe pas dans l'établissement")
+    }
+
+    const teacher = classroom.teachers.find(t => t.teacherId === teacherId)
+    if (teacher) {
+      return handleError.errorConstructor(STATUS_CODE.DATA_EXIST, null, "ce professeur existe déjà dans la classe")
+    }
+
+    const d = {
+      teacherId,
+      isPincipal: data.isPincipal
+    }
+
+    classroom.teachers.push(d);
+
+    const c = await utilsTools.save(classroom, getCurrentObject(classroom.teachers))
+
+    return c;
+
+  } catch (error) {
+
+    console.log("classroom_service_teacher_error =>", error)
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR)
+  }
+}
 
 module.exports.absence = async (id, data) => {
   try {
@@ -573,6 +622,58 @@ module.exports.updateAbsence = async (id, data) => {
     return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
   }
 
+
+}
+
+module.exports.updateTeacher = async (id, data) => {
+  try {
+
+    const { teacherId, isPrincipal, classroomTeacherId } = data
+
+    const classroom = (await this.getOne(id)).send.docs;
+    if (!classroom) {
+
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "classe");
+    }
+
+    const theTeacher = getObjectValue(classroomTeacherId, classroom.teachers)
+    if (!theTeacher) {
+
+      return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "ce professeur n'existe pas dans la liste des professeurs de la classe");
+    }
+
+    if (teacherId) {
+
+      const teacher = classroom.teachers.find(t => t.teacherId === teacherId)
+
+      if (teacher) {
+        return handleError.errorConstructor(STATUS_CODE.DATA_EXIST, null, "ce professeur existe déjà dans la classe")
+      }
+
+      const school = await (await schoolService.getOne(classroom.schoolId)).send.docs
+
+      if (!school) {
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "établissement")
+      }
+
+      if (!getObjectValue(teacherId, school.actors)) {
+        return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, "ce professeur n'existe pas dans l'établissement")
+      }
+
+      theTeacher.teacherId = teacherId;
+
+    }
+
+    if (isPrincipal !== null) {
+      theTeacher.isPrincipal = isPrincipal
+    }
+
+    return await utilsTools.save(classroom, theTeacher)
+
+  } catch (error) {
+    console.log("classroum_service_updateTeacher_error =>", error)
+    return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+  }
 
 }
 

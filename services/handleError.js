@@ -7,13 +7,13 @@ module.exports.codeError = [
 
     { code: STATUS_CODE.NOT_DATA, msg: "Pas de données!" },
 
-    { code: STATUS_CODE.DATA_INCORRECT, msg: "donnée incorrect!" },
+    { code: STATUS_CODE.DATA_INCORRECT, msg: "Donnée incorrect!" },
 
-    { code: STATUS_CODE.DATA_EXIST, msg: "donnée existant!" },
+    { code: STATUS_CODE.DATA_EXIST, msg: "Donnée existant!" },
 
-    { code: STATUS_CODE.NOT_FOUND, msg: "document non trouvé!" },
+    { code: STATUS_CODE.NOT_FOUND, msg: "Document non trouvé!" },
 
-    { code: STATUS_CODE.DATA_REQUIS, msg: "donnée requis!" },
+    { code: STATUS_CODE.DATA_REQUIS, msg: "Donnée requis!" },
 ]
 
 module.exports.errorConstructor = (code, data, message) => {

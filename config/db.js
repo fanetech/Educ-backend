@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 require("dotenv").config({ path: "./config/.env" });
 // let conn
-const url = "mongodb://0.0.0.0:27017"
-// const url = `mongodb+srv://${process.env.DBUSERNAME}:${process.env.DBPASWORD}@cluster0.fetcq4j.mongodb.net`
+// const url = "mongodb://0.0.0.0:27017"
+const url = `mongodb+srv://${process.env.DBUSERNAME}:${process.env.DBPASWORD}@cluster0.fetcq4j.mongodb.net`
 mongoose
 	.connect(
 `${url}/EducDB`,
