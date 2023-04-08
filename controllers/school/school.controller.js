@@ -46,13 +46,7 @@ module.exports.getOne = async (req, res) => {
 
 module.exports.getSchoolOfUser = async (req, res) => {
 
-  const reqAnalityc = utilsTools.checkRequest(req)
-
-  if(reqAnalityc !== 1){
-    return await utilsError.globalSatuts(res, reqAnalityc)
-  }
-
-  const {userId}= req.body
+  const userId= req.params.userId 
   
   if (!userId) {
 

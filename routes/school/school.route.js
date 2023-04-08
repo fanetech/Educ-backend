@@ -5,7 +5,7 @@ const router = require("express").Router();
 // school route
 router.post("/", schoolController.create);
 router.get("/", schoolController.getAll);
-router.get("/user", schoolController.getSchoolOfUser);
+router.get("/user/:userId", schoolController.getSchoolOfUser);
 router.get("/:id", schoolController.getOne);
 router.delete("/:id", schoolController.remove);
 router.delete("/soft/:id", schoolController.softDelete);
