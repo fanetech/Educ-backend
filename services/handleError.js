@@ -18,7 +18,7 @@ module.exports.codeError = [
 
 module.exports.errorConstructor = (code, data, message) => {
 
-    let response = { send: {entete: {code: null, msgs: ""}, docs: null}, status: 502 }
+    let response = { send: {entete: {code: null, msg: ""}, docs: null}, status: 502 }
 
     response.send.docs = data ?? null
 
@@ -32,7 +32,7 @@ module.exports.errorConstructor = (code, data, message) => {
 
     if(message){
         response.send.entete.code = error.code
-        response.send.entete.msgs = `${error.msg} ${message}.`
+        response.send.entete.msg = `${error.msg} ${message}.`
     }else {
         
         response.send.entete = error
