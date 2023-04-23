@@ -61,7 +61,8 @@ module.exports.getSchoolOfUser = async (req, res) => {
           userId: userId,
         },
       },
-    })
+    }).populate("schoolYears.classroomIds", ["name", "totalPupil"])
+    .populate("actors.userId", ["userName", "firstName", "lastName", "number", "email"]);
     return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, userSchools));
   } catch (error) {
     
