@@ -6,6 +6,7 @@ const emailRoute = require("./routes/mails/mail.route");
 const schoolRoute = require("./routes/school/school.route");
 const directoryRoute = require("./routes/files/directory.route");
 const classroumRoute = require("./routes/classroum/classroum.route");
+const main = require("./main");
 require("dotenv").config({ path: "./config/.env" });
 require("./config/db");
 
@@ -39,8 +40,9 @@ app.use(`${ENPOINT}${ENPOINTSCHOOL}`, schoolRoute);
 app.use(`${ENPOINT}${ENPOINT_DIRECTORY}`, directoryRoute);
 app.use(`${ENPOINT}${ENPOINT_CLASS}`, classroumRoute);
 
-app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}`);
+app.listen(PORT, async () => {
+  await main();
+  console.log(`Server is running on port ${PORT}`);
 });
 
 module.exports = app
