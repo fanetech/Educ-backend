@@ -3,7 +3,9 @@ const userService = require('./user.service')
 const utilsError  = require('../../utils/utils.errors');
 const utilsTools  = require('../../utils/utils.tools');
 const { USER_ROLE, STATUS_CODE } = require("../../services/constant");
-const handleError = require("../../services/handleError")
+const handleError = require("../../services/handleError");
+const { realmQuery } = require("../../services/realmQuery");
+const { userSchema } = require("../../modules/user/model/userModel");
 
 module.exports.getUserById = async (req, res) => {
   
@@ -13,16 +15,19 @@ module.exports.getUserById = async (req, res) => {
 
 };
 
-module.exports.getAllUser = (req, res) => {
-  userModel
-    .find((err, users) => {
-      if (!err) {
-        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, users));
-      } else {
-        return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR));
-      }
-    })
-    .select({ password: false });
+module.exports.getAllUser = async (req, res) => {
+  // userModel
+  //   .find((err, users) => {
+  //     if (!err) {
+  //       return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, users));
+  //     } else {
+  //       return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR));
+  //     }
+  //   })
+  //   .select({ password: false });
+  const response = await realmQuery.getAll(userSchema.name)
+  console.log("getAllUser => ", response);
+  return utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.SUCCESS, response));;
 };
 
 module.exports.updateUser = async (req, res) => {

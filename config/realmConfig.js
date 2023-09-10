@@ -1,6 +1,7 @@
 const Realm = require('realm');
-const { userModel } = require('../modules/user/model/userModel');
+const { userSchema, user_schoolsSchema } = require('../modules/user/model/userModel');
 const { getAtlasApp } = require('../atlasAppService/getAtlasApp');
+const { SYNC_STORE_ID } = require('../atlasAppService/config');
 
 let app = getAtlasApp();
 let realm;
@@ -18,7 +19,7 @@ const openRealm = async () => {
   try {
     realm = await Realm.open({
 
-      schema: [userModel],
+      schema: [userSchema, user_schoolsSchema],
       sync: {
         user: app.currentUser,
         flexible: true,
@@ -27,7 +28,7 @@ const openRealm = async () => {
         initialSubscriptions: {
           update: (subs, realm) => {
             subs.add(
-              realm.objects(userModel.name).filtered('storeId = $0', SYNC_STORE_ID),
+              realm.objects(userSchema.name).filtered('storeId = $0', SYNC_STORE_ID),
               { name: 'storeA' },
             );
           },
