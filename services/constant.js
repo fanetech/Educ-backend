@@ -15,6 +15,7 @@ module.exports.ACTORS_ROLE = ['teacher', 'founder', 'accountant'];
 module.exports.STATUS_CODE = {
     SUCCESS: 0,
     UNEXPECTED_ERROR: 1000,
+    UNEXPECTED_ERROR_DB: 1001,
     NOT_DATA: 2000,
     DATA_INCORRECT: 2001,
     DATA_REQUIS: 2002,

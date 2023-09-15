@@ -1,12 +1,16 @@
 const express = require("express");
 const cors = require("cors");
-const authUser = require("./routes/auth/auth.user");
+const authUser = require("./modules/auth/authUserRouter");
 const user = require("./routes/user/user.route");
 const emailRoute = require("./routes/mails/mail.route");
 const schoolRoute = require("./routes/school/school.route");
 const directoryRoute = require("./routes/files/directory.route");
 const classroumRoute = require("./routes/classroum/classroum.route");
 const main = require("./main");
+const { realmQuery } = require("./services/realmQuery");
+const { user_schoolsSchema, userSchema } = require("./modules/user/model/userModel");
+const { getRealm } = require("./config/realmConfig");
+const { on } = require("nodemon");
 require("dotenv").config({ path: "./config/.env" });
 require("./config/db");
 
@@ -39,6 +43,25 @@ app.use(`${ENPOINT}${ENPOINTMAIL}`, emailRoute);
 app.use(`${ENPOINT}${ENPOINTSCHOOL}`, schoolRoute);
 app.use(`${ENPOINT}${ENPOINT_DIRECTORY}`, directoryRoute);
 app.use(`${ENPOINT}${ENPOINT_CLASS}`, classroumRoute);
+
+app.get("/", async (req, res) => {
+  const response = await realmQuery.getAll(user_schoolsSchema.name);
+  res.send(response);
+});
+app.post("/", async (req, res) => {
+  const realm = getRealm();
+  const oneUser = await realmQuery.getOne(userSchema.name, req.body.id);
+  // const response = await realmQuery.add(user_schoolsSchema.name, req.body);
+  realm.write(() => {
+   const userSchool = realm.create(user_schoolsSchema.name, {
+      role: req.body.role,
+    //  schoolId: req.body.schoolId,
+     userId: oneUser._id,
+    });
+    oneUser.schools.push(userSchool._id)
+  });
+  res.send(oneUser);
+});
 
 app.listen(PORT, async () => {
   await main();

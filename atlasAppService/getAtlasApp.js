@@ -14,7 +14,7 @@ exports.getAtlasApp = function getAtlasApp() {
     // * https://www.mongodb.com/docs/realm/sdk/node/examples/sync-changes-between-devices/#set-the-client-log-level
     // * https://www.mongodb.com/docs/realm-sdks/js/latest/Realm.App.Sync.html#.setLogLevel
     const logLevels = ['all', 'trace', 'debug', 'detail', 'info', 'warn', 'error', 'fatal', 'off'];
-    Realm.App.Sync.setLogLevel(app, 'debug');
+    // Realm.App.Sync.setLogLevel(app, 'debug');
     // Realm.App.Sync.setLogger(app, (numericLevel, message) => {
     //   console.info(`Log level: ${logLevels[numericLevel]} - Log message: ${message}`);
     // });

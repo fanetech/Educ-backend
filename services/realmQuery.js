@@ -1,23 +1,40 @@
+const { BSON } = require("realm");
 const { SYNC_STORE_ID } = require("../atlasAppService/config");
 const { getRealm } = require("../config/realmConfig");
+const { customQuery } = require("./customQuery");
+const handleError = require("../services/handleError");
+const { STATUS_CODE } = require("./constant");
 
 exports.realmQuery = {
-    add: (schema, data) => {
-        const realm = getRealm();
-        console.log(realm)
-        let dataToSend;
-
-        realm.write(() => {
-            dataToSend = realm.create(schema, data);
-        });
-        return dataToSend;
+    add: async (schema, data) => {
+        try {
+            const realm = getRealm();
+            let dataToSend;
+            if (realm) {
+                realm.write(() => {
+                    dataToSend = realm.create(schema, data);
+                });
+                return handleError.errorConstructor(STATUS_CODE.SUCCESS, dataToSend);
+            } else {
+                return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR_DB);
+            }
+        } catch (error) {
+            console.log("realmQuery.add error => ", error);
+            return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR_DB);
+        }
     },
     getOne: (schema, id) => {
+        const realm = getRealm();
         return realm.objectForPrimaryKey(schema, new BSON.ObjectId(id));
     },
     getAll: async (schema) => {
         const realm = getRealm();
-        return await realm.objects(schema).filtered('storeId = $0', SYNC_STORE_ID);        
+
+        return await realm.objects(schema);
+    },
+    getWithQuery: (schema, query) => {
+        const realm = getRealm();
+        return realm.objects(schema).filtered(query);
     },
     update: (schema, data) => {
         return realm.write(() => {

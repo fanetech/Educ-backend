@@ -17,11 +17,13 @@
 //     indexed: ['username', 'number', 'email'],
 // }
 
+const { SYNC_STORE_ID } = require("../../../atlasAppService/config");
+
 
 exports.userSchema = {
-  name: 'user',
+  name: 'users',
   properties: {
-    storeId: { type: 'objectId', indexed: true },
+    deviceId: 'objectId?',
     _id: { type: 'objectId', default: () => new Realm.BSON.ObjectId() },
     __v: 'int?',
     adress: 'string?',
@@ -32,7 +34,7 @@ exports.userSchema = {
     number: 'string?',
     password: 'string',
     role: 'string?',
-    schools: 'user_schools',
+    schools: 'objectId[]',
     updatedAt: 'date?',
     userName: 'string?',
   },
@@ -40,12 +42,25 @@ exports.userSchema = {
 };
 
 exports.user_schoolsSchema = {
-    name: 'user_schools',
-    embedded: true,
+    name: 'users_schools',
+    // embedded: true,
     properties: {
-      _id: { type: 'objectId', default: () => new Realm.BSON.ObjectId() },
+      deviceId: 'objectId?',
+      _id: { type: 'objectId', default: () => new Realm.BSON.ObjectId()},
       role: 'string?',
       schoolId: 'objectId?',
       status: 'bool?',
+      userId: 'objectId'
     },
+    primaryKey: '_id',
+  };
+
+  exports.test = {
+    name: 'tests',
+    properties: {
+      _id: { type: 'objectId', default: () => new Realm.BSON.ObjectId() },
+      name: 'string?',
+      storeId: { type: 'objectId', indexed: true , default: SYNC_STORE_ID},
+    },
+    primaryKey: '_id',
   };
