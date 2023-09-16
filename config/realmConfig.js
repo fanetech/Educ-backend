@@ -3,6 +3,7 @@ const Realm = require('realm');
 const { userSchema, user_schoolsSchema, test } = require('../modules/user/model/userModel');
 const { getAtlasApp } = require('../atlasAppService/getAtlasApp');
 const { SYNC_STORE_ID } = require('../atlasAppService/config');
+const { schoolSchema } = require('../modules/school/models/schoolModel');
 
 let app = getAtlasApp();
 let realm;
@@ -20,7 +21,7 @@ const openRealm = async () => {
   try {
     realm = await Realm.open({
 
-      schema: [userSchema, user_schoolsSchema, test],
+      schema: [userSchema, user_schoolsSchema, schoolSchema, test],
       // schemaVersion: 1,
       sync: {
         user: app.currentUser,

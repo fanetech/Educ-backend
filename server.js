@@ -1,11 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 const authUser = require("./modules/auth/authUserRouter");
-const user = require("./routes/user/user.route");
+const user = require("./modules/user/userRouter");
 const emailRoute = require("./routes/mails/mail.route");
-const schoolRoute = require("./routes/school/school.route");
+// const schoolRoute = require("./modules/school/schoolRouter");
 const directoryRoute = require("./routes/files/directory.route");
-const classroumRoute = require("./routes/classroum/classroum.route");
+// const classroumRoute = require("./routes/classroum/classroum.route");
 const main = require("./main");
 const { realmQuery } = require("./services/realmQuery");
 const { user_schoolsSchema, userSchema } = require("./modules/user/model/userModel");
@@ -40,9 +40,9 @@ app.use(
 app.use(`${ENPOINT}${ENPOINTAUTH}/user`, authUser);
 app.use(`${ENPOINT}/user`, user);
 app.use(`${ENPOINT}${ENPOINTMAIL}`, emailRoute);
-app.use(`${ENPOINT}${ENPOINTSCHOOL}`, schoolRoute);
+// app.use(`${ENPOINT}${ENPOINTSCHOOL}`, schoolRoute);
 app.use(`${ENPOINT}${ENPOINT_DIRECTORY}`, directoryRoute);
-app.use(`${ENPOINT}${ENPOINT_CLASS}`, classroumRoute);
+// app.use(`${ENPOINT}${ENPOINT_CLASS}`, classroumRoute);
 
 app.get("/", async (req, res) => {
   const response = await realmQuery.getAll(user_schoolsSchema.name);

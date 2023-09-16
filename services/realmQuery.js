@@ -24,8 +24,13 @@ exports.realmQuery = {
         }
     },
     getOne: (schema, id) => {
-        const realm = getRealm();
-        return realm.objectForPrimaryKey(schema, new BSON.ObjectId(id));
+        try {
+            const realm = getRealm();
+            return realm.objectForPrimaryKey(schema, new BSON.ObjectId(id));
+        } catch (error) {
+            console.log("realmQuery.getOne error => ", error);
+            return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR_DB);
+        }
     },
     getAll: async (schema) => {
         const realm = getRealm();
@@ -36,18 +41,38 @@ exports.realmQuery = {
         const realm = getRealm();
         return realm.objects(schema).filtered(query);
     },
-    update: (schema, data) => {
+    updateElseCreate: (schema, data) => {
         return realm.write(() => {
             realm.create(schema, data, "modified");
         });
     },
+    upadte: (schema, id, data) => {
+        try {
+            const realm = getRealm();
+            let dataToSend;
+            const bsnId = new BSON.ObjectId(id);
+            const dataToUpdate = realm.objectForPrimaryKey(schema, bsnId);
+            if (dataToUpdate.length < 1) {
+                return null;
+            }
+            realm.write(() => {
+                dataToSend = realm.create(schema, { _id: bsnId, ...data }, "modified");
+            });
+            return dataToSend;
+        } catch (error) {
+            console.log("realmQuery.update error => ", error);
+            return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR_DB);
+        }
+    },
     delete: (schema, id) => {
+        const realm = getRealm();
         const data = realm.objectForPrimaryKey(schema, new BSON.ObjectId(id));
-        if (data.length < 1) {
+        if (!data) {
             return false;
         }
-        return realm.write(() => {
+         realm.write(() => {
             realm.delete(data);
         });
+        return true;
     },
 }

@@ -22,6 +22,8 @@ module.exports.specificError = {
     PASSWORD_ERROR: "mot de passe court!",
     INCORRECT_ROLE: (roleUsed) => "role incorect. utiliser " + Object.values(roleUsed).toString(),
     USER_LOGIN_DATA_ERROR: "identifiants incorrect!",
+    SCHOOL_CREATE_MISSING_DATA: "nom de établissement, slogan ou un fondateur",
+    GET_USER_BY_ID_NOT_FOUND: "utilisateur non trouvé!",
 }
 
 module.exports.errorConstructor = (code, data, message) => {

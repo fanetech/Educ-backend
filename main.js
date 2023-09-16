@@ -3,16 +3,16 @@ const exampleEmail = 'louguefranck.20@gmail.com';
 const examplePassword = '123456';
 
 async function main() {
-    let success = await register(exampleEmail, examplePassword);
-    if (!success) {
-      console.log('Register failed.');
-      return;
-    }
+    // let success = await register(exampleEmail, examplePassword);
+    // if (!success) {
+    //   console.log('Register failed.');
+    //   return;
+    // }
   
-    success = await logIn(exampleEmail, examplePassword);
-    if (!success) {
-      return;
-    }
+    // success = await logIn(exampleEmail, examplePassword);
+    // if (!success) {
+    //   return;
+    // }
   
     await openRealm();
   
