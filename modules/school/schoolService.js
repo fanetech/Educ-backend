@@ -1,88 +1,83 @@
-const { STATUS_CODE } = require('../../services/constant');
+const { getRealm } = require('../../config/realmConfig');
+const { STATUS_CODE, SERVER_STATUS } = require('../../services/constant');
 const handleError = require('../../services/handleError');
 const { realmQuery } = require('../../services/realmQuery');
-const { userSchema } = require('../user/model/userModel');
+const { userSchema, userSchoolSchema } = require('../user/model/userModel');
+const { schoolActorSchema } = require('../schoolActor/models/schoolActorModel');
 const { schoolSchema } = require('./models/schoolModel');
 
 module.exports.create = async (data) => {
-    let user;
+    try {
+        const { schoolName, slogan, founderId } = data;
+        if (!schoolName || !slogan || !founderId) {
+            return handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, handleError.specificError.SCHOOL_CREATE_MISSING_DATA);
+        }
 
-    const { schoolName, slogan, founderId } = data;
-    if (!schoolName || !slogan || !founderId) {
-        return handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, handleError.specificError.SCHOOL_CREATE_MISSING_DATA);
+        // check user exist
+        const user = await realmQuery.getOne(userSchema.name, founderId);
+        if (!user || user.status === SERVER_STATUS.SERVICE_UNAVAILABLE) {
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.GET_USER_BY_ID_NOT_FOUND);
+        }
+
+        // check user field requirement for school creation
+        const { userName, firstName, lastName, number, email, adress, role } = user
+        if (!userName || !firstName || !lastName || !number || !email || !adress || !role) {
+            return handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, handleError.specificError.USER_REQUIREMENT_EXCEPTION_SCHOOL_CREATE);
+        }
+
+        const realm = getRealm();
+        let schoolCreated, actorCreated, userSchoolCreated;
+        realm.write(() => {
+            schoolCreated = realm.create(schoolSchema.name, {
+                schoolName,
+                slogan,
+                founder: founderId,
+            });
+            actorCreated = realm.create(schoolActorSchema.name, {
+                schoolId: schoolCreated._id,
+                userId: user._id,
+                role,
+                actif: true,
+            });
+            schoolCreated.actors.push(actorCreated._id);
+            userSchoolCreated = realm.create(userSchoolSchema.name, {
+                schoolId: schoolCreated._id,
+                userId: user._id,
+                role,
+                status: true,
+            });
+            user.schools.push(userSchoolCreated._id);
+        });
+        console.log("schoolCreated =>", schoolCreated)
+
+        if (!schoolCreated || !actorCreated || !userSchoolCreated) {
+            return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+        }
+
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, schoolCreated);
+
+    } catch (error) {
+        console.log("school_create_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
     }
+}
 
-    const checkUser = await realmQuery.getOne(userSchema.name, founderId);
-
-    console.log("checkUser =>", checkUser)
-
-    // if (!checkUser) {
-
-    //     return checkUser;
-    // } else {
-
-    //     const { userName, firstName, lastName, number, email, adress, role } = _checkUser
-    //     if (!userName || !firstName || !lastName || !number || !email || !adress || !role) {
-    
-    //         return handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, "pour le titulaire de l'etablissement, veuillez mettre à jour votre profile");
-    //     }
-
-    //     user = _checkUser
-    // }
-
-    // let newSchool;
-
-    // const session = await mongoose.startSession();
-    // session.startTransaction()
-    // try {
-
-    //     /****create school*******/
-
-    //     newSchool = await schoolModel.create({
-    //         schoolName,
-    //         slogan,
-    //         founderId,
-    //     });
-
-    //     /******add user to actor object********/
-
-    //     newSchool.actors = {
-    //         role: USER_ROLE.founder,
-    //         actif: true,
-    //         userId: founderId,
-    //     };
-
-    //     const _school = await this.schoolSave(newSchool, null, null)
-    //     if (!_school?.send?.docs) {
-    //         return _school;
-    //     }
-    //     const school = _school?.send?.docs
-
-    //     /*******push school to user object********/
-
-    //     const newUserSchool = {
-    //         schoolId: school._id,
-    //         role: USER_ROLE.founder,
-    //     }
-    //     user.schools.push(newUserSchool)
-    //     const u = await user.save()
-
-    //     if (!u) {
-
-    //         await this.remove(school._id) // TODO check remove
-    //         return   handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
-    //     }
-
-    //     await session.commitTransaction()
-
-    //      return handleError.errorConstructor(STATUS_CODE.SUCCESS, school);
-
-    // } catch (error) {
-    //     session.abortTransaction()
-    //     console.log("school_create_error =>", error)
-    //     return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
-    // }
-    // finally {
-    //     session.endSession()
-    // }
+module.exports.addActor = async (data) => {
+    try {
+        const { schoolId, userId, role } = data;
+        const user = await realmQuery.getOne(schoolSchema.name, userId);
+        if (!user || user.status === SERVER_STATUS.SERVICE_UNAVAILABLE) {
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND);
+        }
+        const actor = realmQuery.add(schoolActorSchema.name, {
+            schoolId,
+            userId,
+            role,
+            actif: true,
+        });
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, null, actor);
+    } catch (error) {
+        console.log("school_addActor_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
 }

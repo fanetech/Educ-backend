@@ -1,4 +1,4 @@
-const { STATUS_CODE } = require('../services/constant');
+const { STATUS_CODE, SERVER_STATUS } = require('../services/constant');
 const handleError = require('../services/handleError')
 
 module.exports.signUpErrors = (err) => {
@@ -36,18 +36,18 @@ module.exports.signUpErrors = (err) => {
   };
 module.exports.globalSatuts = (res, data) => {
     switch (data.status) {
-      case 200:
-        return res.status(200).json(data.send);
-      case 500:
-         return res.status(500).json(data.send);
-      case 502:
-         return res.status(502).json(data.send);
-      case 503:
-         return res.status(503).json(data.send);
-      case 400:
-         return res.status(400).json(data.send);
-      case 404:
-         return res.status(404).json(data.send);
+      case SERVER_STATUS.SUCCESS:
+        return res.status(SERVER_STATUS.SUCCESS).json(data.send);
+      case SERVER_STATUS.UNEXPECTED_ERROR:
+         return res.status(SERVER_STATUS.UNEXPECTED_ERROR).json(data.send);
+      case SERVER_STATUS.BAD_GATEWAY:
+         return res.status(SERVER_STATUS.BAD_GATEWAY).json(data.send);
+      case SERVER_STATUS.SERVICE_UNAVAILABLE:
+         return res.status(SERVER_STATUS.SERVICE_UNAVAILABLE).json(data.send);
+      case SERVER_STATUS.DATA_INCORRECT:
+         return res.status(SERVER_STATUS.DATA_INCORRECT).json(data.send);
+      case SERVER_STATUS.NOT_FOUND:
+         return res.status(SERVER_STATUS.NOT_FOUND).json(data.send);
     
       default:
         break;

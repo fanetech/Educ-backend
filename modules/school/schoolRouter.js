@@ -19,7 +19,6 @@ router.post("/", schoolController.create);
 // router.patch("/update/:id", schoolController.updateSchool);
 // router.patch("/update/year/:id", schoolController.updateSchoolYear);
 // router.patch("/update/period/:id", schoolController.updateSchoolYearPeriod);
-// router.patch("/update/actor/:id", schoolController.updateSchoolActor);
 // router.patch("/update/deadline/:id", schoolController.updateSchoolYearDeadline);
 
 // //library route
@@ -28,6 +27,7 @@ router.post("/", schoolController.create);
 
 // // school actor
 // router.put("/actor/:id", schoolController.createSchoolActor);
+// router.patch("/update/actor/:id", schoolController.updateSchoolActor);
 
 //year
 

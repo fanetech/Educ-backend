@@ -1,4 +1,4 @@
-const { STATUS_CODE } = require("./constant");
+const { STATUS_CODE, SERVER_STATUS } = require("./constant");
 
 module.exports.codeError = [
     { code: STATUS_CODE.SUCCESS, msg: "Opération effectuée avec succès!" },
@@ -24,6 +24,8 @@ module.exports.specificError = {
     USER_LOGIN_DATA_ERROR: "identifiants incorrect!",
     SCHOOL_CREATE_MISSING_DATA: "nom de établissement, slogan ou un fondateur",
     GET_USER_BY_ID_NOT_FOUND: "utilisateur non trouvé!",
+    USER_REQUIREMENT_EXCEPTION_SCHOOL_CREATE: "pour le titulaire de l'etablissement, veuillez mettre à jour votre profile: nom, prénom, numéro de téléphone, email, adresse, role=fondateur",
+    DATA_REQUIRED: "données indispensable incorect"
 }
 
 module.exports.errorConstructor = (code, data, message) => {
@@ -42,16 +44,16 @@ module.exports.errorConstructor = (code, data, message) => {
     }
 
     if (code >= STATUS_CODE.SUCCESS && code <= STATUS_CODE.SUCCESS) {
-        response.status = 200;
+        response.status = SERVER_STATUS.SUCCESS;
 
     } else if (STATUS_CODE.UNEXPECTED_ERROR && code < STATUS_CODE.NOT_DATA) {
-        response.status = 500;
+        response.status = SERVER_STATUS.UNEXPECTED_ERROR;
 
     } else if (code >= STATUS_CODE.NOT_DATA) {
-        response.status = 400;
+        response.status = SERVER_STATUS.NOT_DATA;
 
     } else {
-        response.status = 503;
+        response.status = SERVER_STATUS.SERVICE_UNAVAILABLE;
     }
     return response
 }

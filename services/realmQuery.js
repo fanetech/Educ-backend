@@ -34,7 +34,6 @@ exports.realmQuery = {
     },
     getAll: async (schema) => {
         const realm = getRealm();
-
         return await realm.objects(schema);
     },
     getWithQuery: (schema, query) => {
