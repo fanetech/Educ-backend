@@ -2,9 +2,10 @@ const { getRealm } = require('../../config/realmConfig');
 const { STATUS_CODE, SERVER_STATUS } = require('../../services/constant');
 const handleError = require('../../services/handleError');
 const { realmQuery } = require('../../services/realmQuery');
-const { userSchema, userSchoolSchema } = require('../user/model/userModel');
+const { userSchema } = require('../user/model/userModel');
 const { schoolActorSchema } = require('../schoolActor/models/schoolActorModel');
 const { schoolSchema } = require('./models/schoolModel');
+const { userSchoolSchema } = require('../userSchool/models/userSchoolModel');
 
 module.exports.create = async (data) => {
     try {

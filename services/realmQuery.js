@@ -29,7 +29,7 @@ exports.realmQuery = {
             return realm.objectForPrimaryKey(schema, new BSON.ObjectId(id));
         } catch (error) {
             console.log("realmQuery.getOne error => ", error);
-            return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR_DB);
+            return null;
         }
     },
     getAll: async (schema) => {
@@ -51,7 +51,7 @@ exports.realmQuery = {
             let dataToSend;
             const bsnId = new BSON.ObjectId(id);
             const dataToUpdate = realm.objectForPrimaryKey(schema, bsnId);
-            if (dataToUpdate.length < 1) {
+            if (dataToUpdate?.length < 1) {
                 return null;
             }
             realm.write(() => {
@@ -60,7 +60,7 @@ exports.realmQuery = {
             return dataToSend;
         } catch (error) {
             console.log("realmQuery.update error => ", error);
-            return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR_DB);
+            return null;
         }
     },
     delete: (schema, id) => {

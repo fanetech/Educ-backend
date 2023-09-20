@@ -25,7 +25,9 @@ module.exports.specificError = {
     SCHOOL_CREATE_MISSING_DATA: "nom de établissement, slogan ou un fondateur",
     GET_USER_BY_ID_NOT_FOUND: "utilisateur non trouvé!",
     USER_REQUIREMENT_EXCEPTION_SCHOOL_CREATE: "pour le titulaire de l'etablissement, veuillez mettre à jour votre profile: nom, prénom, numéro de téléphone, email, adresse, role=fondateur",
-    DATA_REQUIRED: "données indispensable incorect"
+    DATA_REQUIRED: "données indispensable incorect",
+    SCHOOL_NOT_FOUND: "etablissement non trouvé!",
+    ACTOR_NOT_FOUND: "acteur non trouvé!",
 }
 
 module.exports.errorConstructor = (code, data, message) => {

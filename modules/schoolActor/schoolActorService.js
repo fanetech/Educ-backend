@@ -9,8 +9,8 @@ module.exports.create = async (data) => {
     try {
         const { schoolId, userId, role } = data;
         const user = await realmQuery.getOne(schoolSchema.name, userId);
-        if (!user || user.status === SERVER_STATUS.SERVICE_UNAVAILABLE) {
-            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND);
+        if (!user) {
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.GET_USER_BY_ID_NOT_FOUND);
         }
         const actor = realmQuery.add(schoolActorSchema.name, {
             schoolId,
@@ -38,6 +38,9 @@ module.exports.getAll = async () => {
 module.exports.getOne = async (id) => {
     try {
         const actor = await realmQuery.getOne(schoolActorSchema.name, id);
+        if(!actor){
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.ACTOR_NOT_FOUND);
+        }
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, actor);
     } catch (error) {
         console.log("school_getOneActor_error =>", error)
@@ -55,12 +58,15 @@ module.exports.modify = async (id, data) => {
         }
         if (data.userId) {
             const user = await realmQuery.getOne(userSchema.name, data.userId);
-            if (!user || user.status === SERVER_STATUS.SERVICE_UNAVAILABLE) {
+            if (!user) {
                 return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.GET_USER_BY_ID_NOT_FOUND);
             }
             data.userId = BSON.ObjectId(data.userId);
         }
         const actor = await realmQuery.upadte(schoolActorSchema.name, id, data);
+        if(!actor){
+            throw new Error("Actor not updated");
+        }
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, actor);
     } catch (error) {
         console.log("school_updateActor_error =>", error)
@@ -71,6 +77,9 @@ module.exports.modify = async (id, data) => {
 module.exports.delete = async (id) => {
     try {
         const actor = await realmQuery.delete(schoolActorSchema.name, id);
+        if(!actor){
+            throw new Error("Actor not deleted or not found");
+        }
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, actor);
     } catch (error) {
         console.log("school_deleteActor_error =>", error)

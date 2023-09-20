@@ -5,10 +5,11 @@ const { realmQuery } = require('../../services/realmQuery');
 const { userSchema } = require('./model/userModel');
 const utilsError = require('../../utils/utils.errors');
 const { customQuery } = require('../../services/customQuery');
+
 module.exports.getById = async (id) => {
     try {
         if (!utilsTools.checkParams(id)) {
-            return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+            throw new Error("id is required");
         }
         const user = await realmQuery.getOne(userSchema.name, id);
         if (!user) {
