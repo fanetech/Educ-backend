@@ -6,7 +6,7 @@ const { userSchema } = require('../user/model/userModel');
 const { schoolActorSchema } = require('../schoolActor/models/schoolActorModel');
 const { schoolSchema } = require('./models/schoolModel');
 const { userSchoolSchema } = require('../userSchool/models/userSchoolModel');
-
+const {BSON} = require('realm');
 module.exports.create = async (data) => {
     try {
         const { schoolName, slogan, founderId } = data;
@@ -16,7 +16,7 @@ module.exports.create = async (data) => {
 
         // check user exist
         const user = await realmQuery.getOne(userSchema.name, founderId);
-        if (!user || user.status === SERVER_STATUS.SERVICE_UNAVAILABLE) {
+        if (!user) {
             return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.GET_USER_BY_ID_NOT_FOUND);
         }
 
@@ -32,7 +32,7 @@ module.exports.create = async (data) => {
             schoolCreated = realm.create(schoolSchema.name, {
                 schoolName,
                 slogan,
-                founder: founderId,
+                founderId: new BSON.ObjectId(founderId),
             });
             actorCreated = realm.create(schoolActorSchema.name, {
                 schoolId: schoolCreated._id,
@@ -79,6 +79,62 @@ module.exports.addActor = async (data) => {
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, null, actor);
     } catch (error) {
         console.log("school_addActor_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+}
+
+module.exports.getOne = async (id) => {
+    try {
+        const school = await realmQuery.getOne(schoolSchema.name, id);
+        if (!school) {
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.SCHOOL_NOT_FOUND);
+        }
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, school);
+    } catch (error) {
+        console.log("school_getOne_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+}
+
+module.exports.getAll = async () => {
+    try {
+        const schools = await realmQuery.getAll(schoolSchema.name);
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, schools);
+    } catch (error) {
+        console.log("school_getAll_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+}
+
+module.exports.modify = async (id, data) => {
+    try {
+        if (data.founderId) {
+            const user = await realmQuery.getOne(userSchema.name, data.founderId);
+            if (!user) {
+                return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.GET_USER_BY_ID_NOT_FOUND);
+            }
+            data.founderId = new BSON.ObjectId(data.founderId);
+        }
+        const school = await realmQuery.upadte(schoolSchema.name, id, data);
+        if (!school) {
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.SCHOOL_NOT_FOUND);
+        }
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, school);
+    } catch (error) {
+        console.log("school_update_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+}
+
+module.exports.remove = async (id) => {
+    try {
+        const school = await realmQuery.delete(schoolSchema.name, id);
+        if (!school) {
+            throw new Error("school not deleted or not found");
+        }
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, school);
+    } catch (error) {
+        console.log("school_remove_error =>", error)
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
     }
 }

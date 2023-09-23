@@ -4,10 +4,11 @@ const router = require("express").Router();
 
 // school route
 router.post("/", schoolController.create);
-// router.get("/", schoolController.getAll);
+router.get("/", schoolController.getAll);
 // router.get("/user/:userId", schoolController.getSchoolOfUser);
-// router.get("/:id", schoolController.getOne);
-// router.delete("/:id", schoolController.remove);
+router.get("/:id", schoolController.getOne);
+router.put("/:id", schoolController.updateSchool); //change
+router.delete("/:id", schoolController.remove);
 // router.delete("/soft/:id", schoolController.softDelete);
 
 // //year route
@@ -16,7 +17,6 @@ router.post("/", schoolController.create);
 // router.put("/year/deadline/:id", schoolController.createYearSchoolDeadline);
 
 // //update
-// router.patch("/update/:id", schoolController.updateSchool);
 // router.patch("/update/year/:id", schoolController.updateSchoolYear);
 // router.patch("/update/period/:id", schoolController.updateSchoolYearPeriod);
 // router.patch("/update/deadline/:id", schoolController.updateSchoolYearDeadline);

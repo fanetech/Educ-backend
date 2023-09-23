@@ -6,7 +6,7 @@ exports.schoolSchema = {
       deviceId: 'objectId?',
       _id: { type: 'objectId', default: () => Realm.BSON.ObjectId() },
       __v: 'int?',
-      founder: 'string',
+      founderId: 'objectId',
       schoolName: 'string',
       slogan: 'string?',
       adress: 'string?',

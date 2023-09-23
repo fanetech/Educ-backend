@@ -26,7 +26,7 @@ module.exports.getById = async (id) => {
 module.exports.getAllUser = async () => {
     const response = await realmQuery.getAll(userSchema.name)
     return handleError.errorConstructor(STATUS_CODE.SUCCESS, response);
-};
+}
 
 module.exports.updateUser = async (data, id) => {
     try {
