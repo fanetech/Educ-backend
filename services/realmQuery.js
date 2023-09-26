@@ -74,4 +74,8 @@ exports.realmQuery = {
         });
         return true;
     },
+    getDataByCustomQuery: async (schema, field, targetValue) => {
+        const realm = getRealm();
+        return await realm.objects(schema).filtered(`${field} IN $0`, [targetValue]);
+    }
 }

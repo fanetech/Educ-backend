@@ -138,3 +138,15 @@ module.exports.remove = async (id) => {
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
     }
 }
+
+module.exports.getSchoolOfUser = async (id) => {
+    console.log("id =>", id)
+    try {
+      const userSchools = await realmQuery.getDataByCustomQuery(schoolSchema.name, "actors", BSON.ObjectId(id));
+      return handleError.errorConstructor(STATUS_CODE.SUCCESS, userSchools);
+    } catch (error) {
+      
+      console.log("school_getSchoolOfUser_error =>", error)
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+  };

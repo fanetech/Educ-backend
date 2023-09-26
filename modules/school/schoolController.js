@@ -44,3 +44,12 @@ module.exports.remove = async (req, res) => {
     const response = await schoolService.remove(id)
     return await utilsError.globalSatuts(res, response)
 }
+
+module.exports.getSchoolOfUser = async (req, res) => {
+    const userId = req?.params?.id;
+    if(!utilsTools.checkParams(userId)){
+        return await utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR, null, handleError.specificError.DATA_REQUIRED));
+    }
+    const response = await schoolService.getSchoolOfUser(userId);
+    return await utilsError.globalSatuts(res, response);
+}
