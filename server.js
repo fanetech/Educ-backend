@@ -7,6 +7,7 @@ const schoolRoute = require("./modules/school/schoolRouter");
 const directoryRoute = require("./routes/files/directory.route");
 const schoolActorRoute = require("./modules/schoolActor/schoolActorRouter");
 const userSchoolRoute = require("./modules/userSchool/userSchoolRouter");
+const schoolYearRoute = require("./modules/schoolYear/schoolYearRouter");
 // const classroumRoute = require("./routes/classroum/classroum.route");
 const main = require("./main");
 const { realmQuery } = require("./services/realmQuery");
@@ -46,6 +47,7 @@ app.use(`${ENPOINT}${ENPOINTSCHOOL}`, schoolRoute);
 app.use(`${ENPOINT}${ENPOINT_DIRECTORY}`, directoryRoute);
 app.use(`${ENPOINT}/school-actor/`, schoolActorRoute);
 app.use(`${ENPOINT}/user-school/`, userSchoolRoute);
+app.use(`${ENPOINT}/school-year/`, schoolYearRoute);
 // app.use(`${ENPOINT}${ENPOINT_CLASS}`, classroumRoute);
 
 app.listen(PORT, async () => {

@@ -26,7 +26,6 @@ module.exports.create = async (data) => {
         if (!userName || !firstName || !lastName || !number || !email || !adress || !role) {
             return handleError.errorConstructor(STATUS_CODE.DATA_REQUIS, null, handleError.specificError.USER_REQUIREMENT_EXCEPTION_SCHOOL_CREATE);
         }
-
         const realm = getRealm();
         let schoolCreated, actorCreated, userSchoolCreated;
         realm.write(() => {

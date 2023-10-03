@@ -1,11 +1,12 @@
 const Realm = require('realm');
 // Realm.flags.THROW_ON_GLOBAL_REALM = false;
-const { userSchema, test } = require('../modules/user/model/userModel');
+const { userSchema } = require('../modules/user/model/userModel');
 const {userSchoolSchema} = require('../modules/userSchool/models/userSchoolModel');
 const { getAtlasApp } = require('../atlasAppService/getAtlasApp');
 const { SYNC_STORE_ID } = require('../atlasAppService/config');
 const { schoolSchema } = require('../modules/school/models/schoolModel');
 const { schoolActorSchema } = require('../modules/schoolActor/models/schoolActorModel');
+const { schoolYearSchema } = require('../modules/schoolYear/models/schoolYearModel');
 
 let app = getAtlasApp();
 let realm;
@@ -23,7 +24,7 @@ const openRealm = async () => {
   try {
     realm = await Realm.open({
 
-      schema: [userSchema, userSchoolSchema, schoolSchema, schoolActorSchema, test],
+      schema: [userSchema, userSchoolSchema, schoolSchema, schoolActorSchema, schoolYearSchema],
       // schemaVersion: 1,
       sync: {
         user: app.currentUser,
@@ -44,6 +45,9 @@ const openRealm = async () => {
             );
             subs.add(
               realm.objects(schoolSchema.name),
+            );
+            subs.add(
+              realm.objects(schoolYearSchema.name),
             );
           },
           rerunOnOpen: true,

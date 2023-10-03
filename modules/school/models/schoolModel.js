@@ -14,7 +14,7 @@ exports.schoolSchema = {
       phone: 'string?',
       actors: 'objectId[]',
       libraries: 'objectId[]',
-      schoolYears: 'objectId[]',
+      schoolYearIds: 'objectId[]',
       settings: 'objectId[]',
       createdAt: 'date?',
       updatedAt: 'date?',
