@@ -45,11 +45,20 @@ module.exports.remove = async (req, res) => {
     return await utilsError.globalSatuts(res, response)
 }
 
-module.exports.getSchoolOfUser = async (req, res) => {
-    const userId = req?.params?.id;
-    if(!utilsTools.checkParams(userId)){
+module.exports.getSchoolActors = async (req, res) => {
+    const schoolId = req?.params?.id;
+    if(!utilsTools.checkParams(schoolId)){
         return await utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR, null, handleError.specificError.DATA_REQUIRED));
     }
-    const response = await schoolService.getSchoolOfUser(userId);
+    const response = await schoolService.getSchoolActors(schoolId);
     return await utilsError.globalSatuts(res, response);
 }
+
+module.exports.addActor = async (req, res) => {
+    const reqAnalityc = utilsTools.checkRequest(req)
+    if (reqAnalityc !== 1) {
+        return await utilsError.globalSatuts(res, reqAnalityc)
+    }
+    const response = await schoolService.addActor(req.params.id, req.body)
+    return await utilsError.globalSatuts(res, response)
+};

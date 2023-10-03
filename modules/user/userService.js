@@ -5,6 +5,8 @@ const { realmQuery } = require('../../services/realmQuery');
 const { userSchema } = require('./model/userModel');
 const utilsError = require('../../utils/utils.errors');
 const { customQuery } = require('../../services/customQuery');
+const { schoolSchema } = require('../school/models/schoolModel');
+const { userSchoolSchema } = require('../userSchool/models/userSchoolModel');
 
 module.exports.getById = async (id) => {
     try {
@@ -56,12 +58,29 @@ module.exports.updateUser = async (data, id) => {
 module.exports.remove = async (id) => {
     try {
         const response = await realmQuery.delete(userSchema.name, id);
-        if(!response){
+        if (!response) {
             return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.GET_USER_BY_ID_NOT_FOUND);
         }
-        return handleError.errorConstructor(STATUS_CODE.SUCCESS, response);        
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, response);
     } catch (error) {
         console.log("userService.remove error => ", error);
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
-  }
+    }
 }
+
+// todo but not working
+module.exports.getSchools = async (id) => {
+    try {
+        const user = await realmQuery.getOne(userSchema.name, id);
+        const userSchools = await realmQuery.getDataByCustomQuery(userSchoolSchema.name, "_id", user.schools);
+        let _userSchools = [];
+        for (const us of userSchools) {
+            _userSchools.push(us.schoolId);
+        }
+        const schools = await realmQuery.getDataByCustomQuery(schoolSchema.name, "_id", _userSchools);
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, schools);
+    } catch (error) {
+        console.log("school_getSchoolOfUser_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+};

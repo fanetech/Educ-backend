@@ -74,8 +74,14 @@ exports.realmQuery = {
         });
         return true;
     },
-    getDataByCustomQuery: async (schema, field, targetValue) => {
-        const realm = getRealm();
-        return await realm.objects(schema).filtered(`${field} IN $0`, [targetValue]);
+    getDataByCustomQuery: async (schema, fieldQuery, value) => {
+        try {
+            const realm = getRealm();
+            const handleValue = value?.length > 0 ? [...value] : [value]
+            return await realm.objects(schema).filtered(`${fieldQuery} IN $0`, handleValue);
+        } catch (error) {
+            console.log("realmQuery.getDataByCustomQuery error => ", error);
+            return null; 
+        }
     }
 }

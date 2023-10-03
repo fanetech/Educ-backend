@@ -1,11 +1,9 @@
 const { userSchoolSchema } = require("./models/userSchoolModel");
 const handleError = require("../../services/handleError");
 const { realmQuery } = require("../../services/realmQuery");
-const { STATUS_CODE, USER_ROLE, SERVER_STATUS } = require("../../services/constant");
+const { STATUS_CODE, USER_ROLE, SERVER_STATUS, SCHEMA_FIELD } = require("../../services/constant");
 const { schoolSchema } = require("../school/models/schoolModel");
 const { BSON } = require("realm");
-const { userSchema } = require("../user/model/userModel");
-const { schoolActorSchema } = require("../schoolActor/models/schoolActorModel");
 
 module.exports.create = async (data) => {
     // try {
@@ -48,7 +46,7 @@ module.exports.getAll = async () => {
 module.exports.getOne = async (id) => {
     try {
         const userSchool = await realmQuery.getOne(userSchoolSchema.name, id);
-        if(!userSchool){
+        if (!userSchool) {
             return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.SCHOOL_NOT_FOUND);
         }
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, userSchool);
@@ -91,6 +89,23 @@ module.exports.delete = async (id) => {
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, response);
     } catch (error) {
         console.log("school_deleteActor_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+}
+
+module.exports.getUserSchoolByField = async (data) => {
+    try {
+        const field = SCHEMA_FIELD[data.field]
+        if (!field) {
+            throw new Error("get_actor_by_field field no found");
+        }
+        const userSchools = await realmQuery.getDataByCustomQuery(userSchoolSchema.name, field, BSON.ObjectId(data.value));
+        if (!userSchools) {
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND);
+        }
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, userSchools);
+    } catch (error) {
+        console.log("school_getActorByUserId_error =>", error)
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
     }
 }

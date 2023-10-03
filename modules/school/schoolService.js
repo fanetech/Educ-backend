@@ -7,6 +7,7 @@ const { schoolActorSchema } = require('../schoolActor/models/schoolActorModel');
 const { schoolSchema } = require('./models/schoolModel');
 const { userSchoolSchema } = require('../userSchool/models/userSchoolModel');
 const {BSON} = require('realm');
+
 module.exports.create = async (data) => {
     try {
         const { schoolName, slogan, founderId } = data;
@@ -49,34 +50,39 @@ module.exports.create = async (data) => {
             });
             user.schools.push(userSchoolCreated._id);
         });
-        console.log("schoolCreated =>", schoolCreated)
-
         if (!schoolCreated || !actorCreated || !userSchoolCreated) {
             return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
         }
-
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, schoolCreated);
-
     } catch (error) {
         console.log("school_create_error =>", error)
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
     }
 }
 
-module.exports.addActor = async (data) => {
+module.exports.addActor = async (schoolId, data) => {
     try {
-        const { schoolId, userId, role } = data;
-        const user = await realmQuery.getOne(schoolSchema.name, userId);
-        if (!user || user.status === SERVER_STATUS.SERVICE_UNAVAILABLE) {
+        const { userId, role } = data;
+        const user = await realmQuery.getOne(userSchema.name, userId);
+        if (!user) {
             return handleError.errorConstructor(STATUS_CODE.NOT_FOUND);
         }
-        const actor = realmQuery.add(schoolActorSchema.name, {
-            schoolId,
-            userId,
-            role,
-            actif: true,
+        const school = await realmQuery.getOne(schoolSchema.name, schoolId);
+        if (!school) {
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND);
+        }
+        const realm = getRealm();
+        let schoolCreated, actorCreated;
+        realm.write(() => {
+            actorCreated = realm.create(schoolActorSchema.name, {
+                schoolId: BSON.ObjectId(schoolId),
+                userId: BSON.ObjectId(userId),
+                role,
+                actif: true,
+            });
+            school.actors.push(actorCreated._id);
         });
-        return handleError.errorConstructor(STATUS_CODE.SUCCESS, null, actor);
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, actorCreated);
     } catch (error) {
         console.log("school_addActor_error =>", error)
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
@@ -139,11 +145,11 @@ module.exports.remove = async (id) => {
     }
 }
 
-module.exports.getSchoolOfUser = async (id) => {
-    console.log("id =>", id)
+module.exports.getSchoolActors = async (id) => {
     try {
-      const userSchools = await realmQuery.getDataByCustomQuery(schoolSchema.name, "actors", BSON.ObjectId(id));
-      return handleError.errorConstructor(STATUS_CODE.SUCCESS, userSchools);
+        const school = await realmQuery.getOne(schoolSchema.name, id);
+        const schoolActors = await realmQuery.getDataByCustomQuery(schoolActorSchema.name, "_id", school.actors);
+      return handleError.errorConstructor(STATUS_CODE.SUCCESS, schoolActors);
     } catch (error) {
       
       console.log("school_getSchoolOfUser_error =>", error)

@@ -44,3 +44,8 @@ module.exports.delete = async (req, res) => {
     const response = await SchoolActorService.delete(id)
     return await utilsError.globalSatuts(res, response)
 }
+
+module.exports.getActorByField = async (req, res) => {
+    const response = await SchoolActorService.getActorByField(req.params)
+    return await utilsError.globalSatuts(res, response)
+}

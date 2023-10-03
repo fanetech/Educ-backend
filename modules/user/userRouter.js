@@ -5,5 +5,6 @@ router.get("/", userController.getAllUser);
 router.get("/:id", userController.getUserById);
 router.put("/:id", userController.updateUser);
 router.delete("/:id", userController.remove);
+router.get("/user-school/:id", userController.getSchools);
 
 module.exports = router;

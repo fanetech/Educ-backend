@@ -32,3 +32,8 @@ module.exports.SERVER_STATUS = {
     BAD_GATEWAY: 502,
     SERVICE_UNAVAILABLE: 503,
 }
+
+module.exports.SCHEMA_FIELD = {
+    user: "userId",
+    school: "schoolId"
+}

@@ -1,6 +1,6 @@
 const { realmQuery } = require("../../services/realmQuery");
 const handleError = require("../../services/handleError");
-const { STATUS_CODE, SERVER_STATUS, USER_ROLE } = require("../../services/constant");
+const { STATUS_CODE, SERVER_STATUS, USER_ROLE, SCHEMA_FIELD } = require("../../services/constant");
 const { schoolActorSchema } = require("./models/schoolActorModel");
 const { userSchema } = require("../user/model/userModel");
 const { BSON } = require("realm");
@@ -83,6 +83,23 @@ module.exports.delete = async (id) => {
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, actor);
     } catch (error) {
         console.log("school_deleteActor_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+}
+
+module.exports.getActorByField = async (data) => {
+    try {
+        const field = SCHEMA_FIELD[data.field]
+        if(!field){
+            throw new Error("get_actor_by_field field no found");
+        }
+        const userActorInSchool = await realmQuery.getDataByCustomQuery(schoolActorSchema.name, field, BSON.ObjectId(data.value));
+        if(!userActorInSchool){
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND);
+        }
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, userActorInSchool);
+    } catch (error) {
+        console.log("school_getActorByUserId_error =>", error)
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
     }
 }

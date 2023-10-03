@@ -44,3 +44,8 @@ module.exports.delete = async (req, res) => {
     const response = await userSchoolService.delete(id)
     return await utilsError.globalSatuts(res, response)
 }
+
+module.exports.getUserSchoolByField = async (req, res) => {
+    const response = await userSchoolService.getUserSchoolByField(req.params)
+    return await utilsError.globalSatuts(res, response)
+}
