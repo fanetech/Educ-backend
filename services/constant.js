@@ -35,5 +35,6 @@ module.exports.SERVER_STATUS = {
 
 module.exports.SCHEMA_FIELD = {
     user: "userId",
-    school: "schoolId"
+    school: "schoolId",
+    schoolYear: "schoolYearId",
 }

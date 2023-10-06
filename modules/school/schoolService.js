@@ -6,7 +6,8 @@ const { userSchema } = require('../user/model/userModel');
 const { schoolActorSchema } = require('../schoolActor/models/schoolActorModel');
 const { schoolSchema } = require('./models/schoolModel');
 const { userSchoolSchema } = require('../userSchool/models/userSchoolModel');
-const {BSON} = require('realm');
+const { BSON } = require('realm');
+const { schoolYearSchema } = require('../schoolYear/models/schoolYearModel');
 
 module.exports.create = async (data) => {
     try {
@@ -148,10 +149,20 @@ module.exports.getSchoolActors = async (id) => {
     try {
         const school = await realmQuery.getOne(schoolSchema.name, id);
         const schoolActors = await realmQuery.getDataByCustomQuery(schoolActorSchema.name, "_id", school.actors);
-      return handleError.errorConstructor(STATUS_CODE.SUCCESS, schoolActors);
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, schoolActors);
     } catch (error) {
-      
-      console.log("school_getSchoolOfUser_error =>", error)
-      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+        console.log("school_getSchoolOfUser_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
     }
-  };
+};
+
+module.exports.getSchoolYears = async (id) => {
+    try {
+        const school = await realmQuery.getOne(schoolSchema.name, id);
+        const schoolYears = await realmQuery.getDataByCustomQuery(schoolYearSchema.name, "_id", school.schoolYearIds);
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, schoolYears);
+    } catch (error) {
+        console.log("school_getSchoolYears_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+};

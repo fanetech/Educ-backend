@@ -8,8 +8,9 @@ router.get("/", schoolController.getAll);
 router.get("/:id", schoolController.getOne);
 router.put("/:id", schoolController.updateSchool); //change
 router.delete("/:id", schoolController.remove);
-router.post("/school-actor/:id", schoolController.addActor); //change
-router.get("/school-actor/:id", schoolController.getSchoolActors); //change
+router.post("/school-actor/:schoolId", schoolController.addActor); //change
+router.get("/school-actor/:schoolId", schoolController.getSchoolActors); //change
+router.get("/school-year/:schoolId", schoolController.getSchoolActors); //change
 // router.delete("/soft/:id", schoolController.softDelete);
 
 // //year route

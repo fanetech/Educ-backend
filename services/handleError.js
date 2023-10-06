@@ -27,7 +27,10 @@ module.exports.specificError = {
     USER_REQUIREMENT_EXCEPTION_SCHOOL_CREATE: "pour le titulaire de l'etablissement, veuillez mettre à jour votre profile: nom, prénom, numéro de téléphone, email, adresse, role=fondateur",
     DATA_REQUIRED: "données indispensable incorect",
     SCHOOL_NOT_FOUND: "etablissement non trouvé!",
+    SCHOOL_YEAR_NOT_FOUND: "Année scolaire non trouvé",
     ACTOR_NOT_FOUND: "acteur non trouvé!",
+    SCHOOL_YEAR_PERIOD_NOT_FOUND: "période scolaire non trouvé!",
+    SCHOOL_YEAR_PERIOD_NDIVISION_ERROR: "nDivision ne doit pas être supérieur au nDivision de l'année scolaire!",
 }
 
 module.exports.errorConstructor = (code, data, message) => {

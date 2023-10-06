@@ -1,20 +1,16 @@
-
 const Realm = require('realm');
-exports.schoolYearSchema = {
-    name: 'schoolYears',
+exports.schoolYearPeriodSchema = {
+    name: 'schoolYearPeriod',
     properties: {
       deviceId: 'objectId?',
       _id: { type: 'objectId', default: () => Realm.BSON.ObjectId() },
-      schoolId:'objectId',
+      schoolYearId:'objectId',
       __v: 'int?',
-      fullYear: 'string',
-      starYear: 'date',
-      endYear: 'date',
+      name: 'string',
+      starDate: 'date',
+      endDate: 'date',
+      status: 'bool',
       nDivision: 'int',
-      division: 'string',
-      periodIds: 'objectId[]',
-      deadlineIds: 'objectId[]',
-      classroomIds: 'objectId[]',
       createdAt: 'date?',
       updatedAt: 'date?',
     },
