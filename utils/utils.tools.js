@@ -1,6 +1,8 @@
 const ObjectId = require("mongoose").Types.ObjectId;
 const { STATUS_CODE } = require("../services/constant");
 const handleError = require("../services/handleError")
+const { BSON } = require('realm');
+
 module.exports.isEmpty = (value) => {
   return (
     value === undefined ||
@@ -51,4 +53,7 @@ module.exports.save = async (doc, sendDoc) => {
     console.log("save_service_error =>", error)
      return   handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR, null, "format des champs attendu invalide");
   } 
+}
+module.exports.convertRealmObjectId = (id) => {
+  return BSON.ObjectId(id)
 }

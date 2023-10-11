@@ -8,7 +8,8 @@ const directoryRoute = require("./routes/files/directory.route");
 const schoolActorRoute = require("./modules/schoolActor/schoolActorRouter");
 const userSchoolRoute = require("./modules/userSchool/userSchoolRouter");
 const schoolYearRoute = require("./modules/schoolYear/schoolYearRouter");
-const SchoolYearPeriod = require("./modules/schoolYearPeriod/schoolYearPeriodRouter")
+const SchoolYearPeriod = require("./modules/schoolYearPeriod/schoolYearPeriodRouter");
+const SchoolYearDeadline = require("./modules/deadline/schoolYearDeadlineRouter");
 // const classroumRoute = require("./routes/classroum/classroum.route");
 const main = require("./main");
 const { realmQuery } = require("./services/realmQuery");
@@ -50,6 +51,7 @@ app.use(`${ENPOINT}/school-actor/`, schoolActorRoute);
 app.use(`${ENPOINT}/user-school/`, userSchoolRoute);
 app.use(`${ENPOINT}/school-year/`, schoolYearRoute);
 app.use(`${ENPOINT}/school-year-period/`, SchoolYearPeriod);
+app.use(`${ENPOINT}/school-year-deadline/`, SchoolYearDeadline);
 // app.use(`${ENPOINT}${ENPOINT_CLASS}`, classroumRoute);
 
 app.listen(PORT, async () => {

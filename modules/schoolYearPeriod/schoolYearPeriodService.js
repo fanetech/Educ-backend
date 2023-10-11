@@ -95,7 +95,7 @@ module.exports.modify = async (id, data) => {
 
 module.exports.remove = async (id) => {
     try {
-        const period = await realmQuery.delete(schoolYearPeriodSchema.name, id);
+        const period = await realmQuery.deleteAndUpdateArray(schoolYearPeriodSchema.name, schoolYearSchema.name, 'periodIds', 'schoolYearId', id);
         if (!period) {
             throw new Error("schoolYearPeriod not deleted or not found");
         }
@@ -121,4 +121,4 @@ module.exports.getschoolYearPeriodByField = async (data) => {
         console.log("getschoolYearPeriodByField_error =>", error)
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
     }
-  }
+}

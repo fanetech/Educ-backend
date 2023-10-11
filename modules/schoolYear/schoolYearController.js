@@ -54,6 +54,15 @@ module.exports.getSchoolYearPeriods = async (req, res) => {
     if(!utilsTools.checkParams(schoolYearId)){
         return await utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR, null, handleError.specificError.DATA_REQUIRED));
     }
-    const response = await schoolYearService.getSchoolYearPeroids(schoolYearId);
+    const response = await schoolYearService.getSchoolYearPeriods(schoolYearId);
+    return await utilsError.globalSatuts(res, response);
+}
+
+module.exports.getSchoolYearDeadline = async (req, res) => {
+    const schoolYearId = req?.params?.schoolYearId;
+    if(!utilsTools.checkParams(schoolYearId)){
+        return await utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR, null, handleError.specificError.DATA_REQUIRED));
+    }
+    const response = await schoolYearService.getSchoolYearDeadlines(schoolYearId);
     return await utilsError.globalSatuts(res, response);
 }

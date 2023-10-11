@@ -1,5 +1,5 @@
 const { getRealm } = require('../../config/realmConfig');
-const { STATUS_CODE, SERVER_STATUS } = require('../../services/constant');
+const { STATUS_CODE, SERVER_STATUS, RETURN_STATUS } = require('../../services/constant');
 const handleError = require('../../services/handleError');
 const { realmQuery } = require('../../services/realmQuery');
 const { userSchema } = require('../user/model/userModel');
@@ -80,7 +80,7 @@ module.exports.addActor = async (schoolId, data) => {
                 role,
                 actif: true,
             });
-            school.actors.push(actorCreated._id);
+            school.actorIds.push(actorCreated._id);
         });
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, actorCreated);
     } catch (error) {
@@ -134,10 +134,13 @@ module.exports.modify = async (id, data) => {
 
 module.exports.remove = async (id) => {
     try {
-        const school = await realmQuery.delete(schoolSchema.name, id);
+        const school = await realmQuery.deleteAndUpdateArray(schoolSchema.name, userSchema.name, 'schools', 'founderId', id, ['actorIds', 'schoolYearIds', 'libraryIds', 'settingIds']);
         if (!school) {
             throw new Error("school not deleted or not found");
         }
+        if(school === RETURN_STATUS.notEmpty){
+            return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR_DB, null, handleError.specificError.FIELD_NOT_EMPTY);
+          }
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, school);
     } catch (error) {
         console.log("school_remove_error =>", error)

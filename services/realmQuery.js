@@ -1,9 +1,9 @@
-const { BSON } = require("realm");
+const { BSON, deleteFile } = require("realm");
 const { SYNC_STORE_ID } = require("../atlasAppService/config");
 const { getRealm } = require("../config/realmConfig");
 const { customQuery } = require("./customQuery");
 const handleError = require("../services/handleError");
-const { STATUS_CODE } = require("./constant");
+const { STATUS_CODE, RETURN_STATUS } = require("./constant");
 
 exports.realmQuery = {
     add: async (schema, data) => {
@@ -64,15 +64,46 @@ exports.realmQuery = {
         }
     },
     delete: (schema, id) => {
-        const realm = getRealm();
-        const data = realm.objectForPrimaryKey(schema, new BSON.ObjectId(id));
-        if (!data) {
+        try {
+            const realm = getRealm();
+            const data = realm.objectForPrimaryKey(schema, new BSON.ObjectId(id));
+            if (!data) {
+                return false;
+            }
+            realm.write(() => {
+                realm.delete(data);
+            });
+            return true;
+        } catch (error) {
+            console.log("realmQuery.delete error => ", error);
             return false;
         }
-         realm.write(() => {
-            realm.delete(data);
-        });
-        return true;
+    },
+    deleteAndUpdateArray: (schemaToDelede, schemaToUpdate, fieldArray, fieldDelete, id, checkArrayField = []) => {
+        try {
+            const realm = getRealm();
+            const deleteData = realm.objectForPrimaryKey(schemaToDelede, new BSON.ObjectId(id));
+            const updateData = realm.objectForPrimaryKey(schemaToUpdate, new BSON.ObjectId(deleteData[fieldDelete]));
+            if(checkArrayField.length > 0) {
+                for (const field of checkArrayField) {
+                    if(deleteData[field]?.length > 0) {
+                        return RETURN_STATUS.notEmpty;
+                    }
+                }
+            }
+            if (!deleteData || !updateData) {
+                return false;
+            }
+            realm.write(() => {
+                const index = updateData[fieldArray].indexOf(deleteData._id);
+                if (index !== -1) updateData[fieldArray].splice(index, 1);
+                realm.delete(deleteData);
+            });
+            return true;
+        } catch (error) {
+            console.log("realmQuery.deleteAndUpdateArray error => ", error);
+            return false;
+        }
     },
     getDataByCustomQuery: async (schema, fieldQuery, value) => {
         try {
@@ -81,7 +112,7 @@ exports.realmQuery = {
             return await realm.objects(schema).filtered(`${fieldQuery} IN $0`, handleValue);
         } catch (error) {
             console.log("realmQuery.getDataByCustomQuery error => ", error);
-            return null; 
+            return null;
         }
     }
 }

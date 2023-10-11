@@ -2,17 +2,12 @@ const { STATUS_CODE, SERVER_STATUS } = require("./constant");
 
 module.exports.codeError = [
     { code: STATUS_CODE.SUCCESS, msg: "Opération effectuée avec succès!" },
-
     { code: STATUS_CODE.UNEXPECTED_ERROR, msg: "Une erreur inattendu c'est produit! Veuillez reessayer!" },
-
+    { code: STATUS_CODE.UNEXPECTED_ERROR_DB, msg: "Une erreur c'est produit sur vos données!" },
     { code: STATUS_CODE.NOT_DATA, msg: "Pas de données!" },
-
     { code: STATUS_CODE.DATA_INCORRECT, msg: "Donnée incorrect!" },
-
     { code: STATUS_CODE.DATA_EXIST, msg: "Donnée existant!" },
-
     { code: STATUS_CODE.NOT_FOUND, msg: "Document non trouvé!" },
-
     { code: STATUS_CODE.DATA_REQUIS, msg: "Donnée requis!" },
 ]
 
@@ -30,7 +25,9 @@ module.exports.specificError = {
     SCHOOL_YEAR_NOT_FOUND: "Année scolaire non trouvé",
     ACTOR_NOT_FOUND: "acteur non trouvé!",
     SCHOOL_YEAR_PERIOD_NOT_FOUND: "période scolaire non trouvé!",
+    SCHOOL_YEAR_DEADLINE_NOT_FOUND: "éheance scolaire non trouvé!",
     SCHOOL_YEAR_PERIOD_NDIVISION_ERROR: "nDivision ne doit pas être supérieur au nDivision de l'année scolaire!",
+    FIELD_NOT_EMPTY: "cette action nécessite la suppression de certaines données!",
 }
 
 module.exports.errorConstructor = (code, data, message) => {
