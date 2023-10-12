@@ -41,14 +41,14 @@ module.exports.create = async (data) => {
                 role,
                 actif: true,
             });
-            schoolCreated.actors.push(actorCreated._id);
+            schoolCreated.actorIds.push(actorCreated._id);
             userSchoolCreated = realm.create(userSchoolSchema.name, {
                 schoolId: schoolCreated._id,
                 userId: user._id,
                 role,
                 status: true,
             });
-            user.schools.push(userSchoolCreated._id);
+            user.schoolIds.push(userSchoolCreated._id);
         });
         if (!schoolCreated || !actorCreated || !userSchoolCreated) {
             return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);

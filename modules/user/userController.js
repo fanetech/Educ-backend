@@ -27,11 +27,11 @@ module.exports.remove = async (req, res) => {
     return await utilsError.globalSatuts(res, response);
 };
 
-module.exports.getSchools = async (req, res) => {
+module.exports.getuserSchools = async (req, res) => {
     const userId = req?.params?.id;
     if(!utilsTools.checkParams(userId)){
         return await utilsError.globalSatuts(res, handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR, null, handleError.specificError.DATA_REQUIRED));
     }
-    const response = await userService.getSchools(userId);
+    const response = await userService.getuserSchools(userId);
     return await utilsError.globalSatuts(res, response);
 };

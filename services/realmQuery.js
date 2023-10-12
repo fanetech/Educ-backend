@@ -84,15 +84,15 @@ exports.realmQuery = {
             const realm = getRealm();
             const deleteData = realm.objectForPrimaryKey(schemaToDelede, new BSON.ObjectId(id));
             const updateData = realm.objectForPrimaryKey(schemaToUpdate, new BSON.ObjectId(deleteData[fieldDelete]));
+            if (!deleteData || !updateData) {
+                return false;
+            }
             if(checkArrayField.length > 0) {
                 for (const field of checkArrayField) {
                     if(deleteData[field]?.length > 0) {
                         return RETURN_STATUS.notEmpty;
                     }
                 }
-            }
-            if (!deleteData || !updateData) {
-                return false;
             }
             realm.write(() => {
                 const index = updateData[fieldArray].indexOf(deleteData._id);

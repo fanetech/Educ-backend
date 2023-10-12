@@ -57,6 +57,7 @@ module.exports.updateUser = async (data, id) => {
 
 module.exports.remove = async (id) => {
     try {
+        // todo don't allow to delete if user school have ids
         const response = await realmQuery.delete(userSchema.name, id);
         if (!response) {
             return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.GET_USER_BY_ID_NOT_FOUND);
@@ -68,17 +69,14 @@ module.exports.remove = async (id) => {
     }
 }
 
-// todo but not working
-module.exports.getSchools = async (id) => {
+module.exports.getuserSchools = async (id) => {
     try {
         const user = await realmQuery.getOne(userSchema.name, id);
-        const userSchools = await realmQuery.getDataByCustomQuery(userSchoolSchema.name, "_id", user.schools);
-        let _userSchools = [];
-        for (const us of userSchools) {
-            _userSchools.push(us.schoolId);
+        if (!user) {
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.GET_USER_BY_ID_NOT_FOUND);
         }
-        const schools = await realmQuery.getDataByCustomQuery(schoolSchema.name, "_id", _userSchools);
-        return handleError.errorConstructor(STATUS_CODE.SUCCESS, schools);
+        const userSchools = await realmQuery.getDataByCustomQuery(userSchoolSchema.name, "_id", user.schoolIds);
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, userSchools);
     } catch (error) {
         console.log("school_getSchoolOfUser_error =>", error)
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);

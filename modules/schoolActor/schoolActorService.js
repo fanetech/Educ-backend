@@ -4,6 +4,7 @@ const { STATUS_CODE, SERVER_STATUS, USER_ROLE, SCHEMA_FIELD } = require("../../s
 const { schoolActorSchema } = require("./models/schoolActorModel");
 const { userSchema } = require("../user/model/userModel");
 const { BSON } = require("realm");
+const { schoolSchema } = require("../school/models/schoolModel");
 
 module.exports.create = async (data) => {
     try {
@@ -74,9 +75,13 @@ module.exports.modify = async (id, data) => {
     }
 }
 
+// todo: recheck and update deleteAndUpdateArray function
 module.exports.delete = async (id) => {
     try {
-        const actor = await realmQuery.delete(schoolActorSchema.name, id);
+        const actor = await realmQuery.deleteAndUpdateArray(schoolActorSchema.name, schoolSchema.name, 'actorIds', 'schoolId', id);
+        if(!response){
+            throw new Error("error to delete actor");
+        }
         if(!actor){
             throw new Error("Actor not deleted or not found");
         }
