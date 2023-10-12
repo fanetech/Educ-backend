@@ -55,7 +55,7 @@ app.use(`${ENPOINT}/school-year-deadline/`, SchoolYearDeadline);
 // app.use(`${ENPOINT}${ENPOINT_CLASS}`, classroumRoute);
 
 app.listen(PORT, async () => {
-  await main();
+  // await main();
   console.log(`Server is running on port ${PORT}`);
 });
 

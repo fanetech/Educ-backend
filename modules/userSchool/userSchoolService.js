@@ -1,9 +1,10 @@
 const { userSchoolSchema } = require("./models/userSchoolModel");
 const handleError = require("../../services/handleError");
 const { realmQuery } = require("../../services/realmQuery");
-const { STATUS_CODE, USER_ROLE, SERVER_STATUS, SCHEMA_FIELD } = require("../../services/constant");
+const { STATUS_CODE, USER_ROLE, SERVER_STATUS, SCHEMA_FIELD, RETURN_STATUS } = require("../../services/constant");
 const { schoolSchema } = require("../school/models/schoolModel");
 const { BSON } = require("realm");
+const { userSchema } = require("../user/model/userModel");
 
 module.exports.create = async (data) => {
     // try {
@@ -85,7 +86,13 @@ module.exports.modify = async (id, data) => {
 
 module.exports.delete = async (id) => {
     try {
-        const response = await realmQuery.delete(userSchoolSchema.name, id);
+        const response = await realmQuery.deleteAndUpdateArray(userSchoolSchema.name, userSchema.name, 'schoolIds', 'userId', id);
+        if(!response){
+            throw new Error("error to delete actor");
+        }
+        if(response === RETURN_STATUS.notEmpty){
+            return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR_DB, null, handleError.specificError.FIELD_NOT_EMPTY);
+          }
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, response);
     } catch (error) {
         console.log("school_deleteActor_error =>", error)

@@ -1,6 +1,6 @@
 const { schoolYearPeriodSchema } = require("./models/schoolYearPeriodModel");
 const handleError = require("../../services/handleError");
-const { STATUS_CODE, SCHEMA_FIELD } = require("../../services/constant");
+const { STATUS_CODE, SCHEMA_FIELD, RETURN_STATUS } = require("../../services/constant");
 const { realmQuery } = require("../../services/realmQuery");
 const { schoolYearSchema } = require("../schoolYear/models/schoolYearModel");
 const utilsTools = require("../../utils/utils.tools");
@@ -99,6 +99,9 @@ module.exports.remove = async (id) => {
         if (!period) {
             throw new Error("schoolYearPeriod not deleted or not found");
         }
+        if(period === RETURN_STATUS.notEmpty){
+            return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR_DB, null, handleError.specificError.FIELD_NOT_EMPTY);
+          }
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, period);
     } catch (error) {
         console.log("schoolYearPeriod_remove_error =>", error)

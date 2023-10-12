@@ -66,7 +66,7 @@ const openRealm = async () => {
 
   } catch (error) {
     console.log('openRealm error: ', error);
-    throw error;
+    throw error; 
   }
 }
 

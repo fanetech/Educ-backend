@@ -15,7 +15,7 @@ exports.userSchema = {
     number: 'string?',
     password: 'string',
     role: 'string?',
-    schools: 'objectId[]',
+    schoolIds: 'objectId[]',
     updatedAt: 'date?',
     userName: 'string?',
   },
