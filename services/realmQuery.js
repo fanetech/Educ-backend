@@ -4,6 +4,7 @@ const { getRealm } = require("../config/realmConfig");
 const { customQuery } = require("./customQuery");
 const handleError = require("../services/handleError");
 const { STATUS_CODE, RETURN_STATUS } = require("./constant");
+const { convertRealmObjectId } = require("../utils/utils.tools");
 
 exports.realmQuery = {
     add: async (schema, data) => {
@@ -38,7 +39,12 @@ exports.realmQuery = {
     },
     getWithQuery: (schema, query) => {
         const realm = getRealm();
+        console.log(realm)
         return realm.objects(schema).filtered(query);
+    },
+    getWithQueryAndId: (schema, query, id) => {
+        const realm = getRealm();
+        return realm.objects(schema).filtered(query, BSON.ObjectId(id));
     },
     updateElseCreate: (schema, data) => {
         return realm.write(() => {
@@ -87,9 +93,9 @@ exports.realmQuery = {
             if (!deleteData || !updateData) {
                 return false;
             }
-            if(checkArrayField.length > 0) {
+            if (checkArrayField.length > 0) {
                 for (const field of checkArrayField) {
-                    if(deleteData[field]?.length > 0) {
+                    if (deleteData[field]?.length > 0) {
                         return RETURN_STATUS.notEmpty;
                     }
                 }
@@ -113,6 +119,22 @@ exports.realmQuery = {
         } catch (error) {
             console.log("realmQuery.getDataByCustomQuery error => ", error);
             return null;
+        }
+    },
+    updateSchemaArray: async (schema, updateObjectId, pushObjectId, fieldArray, classroomId) => {
+        try {
+            const realm = getRealm();
+            const objectToUpdate = realm.objectForPrimaryKey(schema, convertRealmObjectId(updateObjectId));
+            const objectToPush = realm.objectForPrimaryKey(schema, convertRealmObjectId(pushObjectId));
+            realm.write(() => {
+                const index = objectToUpdate[fieldArray].indexOf(classroomId);
+                if (index !== -1) objectToUpdate[fieldArray].splice(index, 1);
+                objectToPush[fieldArray].push(classroomId);
+            }, "modified");
+            return true;
+        } catch (error) {
+            console.log("realmQuery.getDataByCustomQuery error => ", error);
+            return false;
         }
     }
 }

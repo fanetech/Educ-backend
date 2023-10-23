@@ -134,7 +134,7 @@ module.exports.modify = async (id, data) => {
 
 module.exports.remove = async (id) => {
     try {
-        const school = await realmQuery.deleteAndUpdateArray(schoolSchema.name, userSchema.name, 'schools', 'founderId', id, ['actorIds', 'schoolYearIds', 'libraryIds', 'settingIds']);
+        const school = await realmQuery.deleteAndUpdateArray(schoolSchema.name, userSchema.name, 'schoolIds', 'founderId', id, ['actorIds', 'schoolYearIds', 'libraryIds', 'settingIds']);
         if (!school) {
             throw new Error("school not deleted or not found");
         }
@@ -151,7 +151,7 @@ module.exports.remove = async (id) => {
 module.exports.getSchoolActors = async (id) => {
     try {
         const school = await realmQuery.getOne(schoolSchema.name, id);
-        const schoolActors = await realmQuery.getDataByCustomQuery(schoolActorSchema.name, "_id", school.actors);
+        const schoolActors = await realmQuery.getDataByCustomQuery(schoolActorSchema.name, "_id", school.actorIds);
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, schoolActors);
     } catch (error) {
         console.log("school_getSchoolOfUser_error =>", error)

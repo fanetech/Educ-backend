@@ -1,7 +1,7 @@
 const Realm = require('realm');
 // Realm.flags.THROW_ON_GLOBAL_REALM = false;
 const { userSchema } = require('../modules/user/model/userModel');
-const {userSchoolSchema} = require('../modules/userSchool/models/userSchoolModel');
+const { userSchoolSchema } = require('../modules/userSchool/models/userSchoolModel');
 const { getAtlasApp } = require('../atlasAppService/getAtlasApp');
 const { SYNC_STORE_ID } = require('../atlasAppService/config');
 const { schoolSchema } = require('../modules/school/models/schoolModel');
@@ -9,6 +9,7 @@ const { schoolActorSchema } = require('../modules/schoolActor/models/schoolActor
 const { schoolYearSchema } = require('../modules/schoolYear/models/schoolYearModel');
 const { schoolYearPeriodSchema } = require('../modules/schoolYearPeriod/models/schoolYearPeriodModel');
 const { schoolYearDeadlineSchema } = require('../modules/deadline/models/schoolYearDeadlineModel');
+const { classroomSchema } = require('../modules/classroom/models/classroomModel');
 
 let app = getAtlasApp();
 let realm;
@@ -25,8 +26,7 @@ function getRealm() {
 const openRealm = async () => {
   try {
     realm = await Realm.open({
-
-      schema: [userSchema, userSchoolSchema, schoolSchema, schoolActorSchema, schoolYearSchema, schoolYearPeriodSchema, schoolYearDeadlineSchema],
+      schema: [userSchema, userSchoolSchema, schoolSchema, schoolActorSchema, schoolYearSchema, schoolYearPeriodSchema, schoolYearDeadlineSchema, classroomSchema],
       // schemaVersion: 1,
       sync: {
         user: app.currentUser,
@@ -57,11 +57,15 @@ const openRealm = async () => {
             subs.add(
               realm.objects(schoolYearDeadlineSchema.name),
             );
+            subs.add(
+              realm.objects(classroomSchema.name),
+            );
           },
           rerunOnOpen: true,
         },
       }
     });
+    // await connexionMongoDBString();
     return realm
 
   } catch (error) {
@@ -191,6 +195,14 @@ function resetUser() {
   originalAccessToken = null;
 }
 
+const connexionMongoDBString = async () => {
+  const connectionString = 'mongodb://louguefranck.20@gmail.com:123456@eu-west-2.aws.realm.mongodb.com:27020/?authMechanism=PLAIN&authSource=%24external&ssl=true&appName=application-0-rijfk:mongodb-atlas:local-userpass';
+
+  // Connect to the MongoDB cluster
+  const client = app.getServiceClient(Realm.App.Sync);
+
+  client.callFunction('openMongoDBRealm', 'mongodb+srv://' + connectionString);
+}
 
 module.exports = {
   openRealm,
@@ -199,5 +211,6 @@ module.exports = {
   modelChange,
   logIn,
   register,
-  confirmEmail
+  confirmEmail,
+  connexionMongoDBString
 }

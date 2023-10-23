@@ -10,8 +10,8 @@ exports.schoolActorSchema = {
         actif: 'bool',
         userId: 'objectId',
         schoolId: 'objectId',
-        createdAt: 'date?',
-        updatedAt: 'date?',
+        createdAt: { type: 'date', default: new Date() },
+        updatedAt: { type: 'date', default: new Date() },
     },
     primaryKey: '_id',
 };

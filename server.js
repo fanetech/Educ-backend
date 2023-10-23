@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const {MongoClient} = require('mongodb');
 const authUser = require("./modules/auth/authUserRouter");
 const user = require("./modules/user/userRouter");
 const emailRoute = require("./routes/mails/mail.route");
@@ -8,14 +9,15 @@ const directoryRoute = require("./routes/files/directory.route");
 const schoolActorRoute = require("./modules/schoolActor/schoolActorRouter");
 const userSchoolRoute = require("./modules/userSchool/userSchoolRouter");
 const schoolYearRoute = require("./modules/schoolYear/schoolYearRouter");
-const SchoolYearPeriod = require("./modules/schoolYearPeriod/schoolYearPeriodRouter");
-const SchoolYearDeadline = require("./modules/deadline/schoolYearDeadlineRouter");
-// const classroumRoute = require("./routes/classroum/classroum.route");
+const SchoolYearPeriodRoute = require("./modules/schoolYearPeriod/schoolYearPeriodRouter");
+const SchoolYearDeadlineRoute = require("./modules/deadline/schoolYearDeadlineRouter");
+const classroomRoute = require("./modules/classroom/classroomRouter");
 const main = require("./main");
 const { realmQuery } = require("./services/realmQuery");
 const { userSchoolSchema, userSchema } = require("./modules/user/model/userModel");
 const { getRealm } = require("./config/realmConfig");
 const { on } = require("nodemon");
+const { getAtlasApp } = require("./atlasAppService/getAtlasApp");
 require("dotenv").config({ path: "./config/.env" });
 require("./config/db");
 
@@ -50,9 +52,14 @@ app.use(`${ENPOINT}${ENPOINT_DIRECTORY}`, directoryRoute);
 app.use(`${ENPOINT}/school-actor/`, schoolActorRoute);
 app.use(`${ENPOINT}/user-school/`, userSchoolRoute);
 app.use(`${ENPOINT}/school-year/`, schoolYearRoute);
-app.use(`${ENPOINT}/school-year-period/`, SchoolYearPeriod);
-app.use(`${ENPOINT}/school-year-deadline/`, SchoolYearDeadline);
-// app.use(`${ENPOINT}${ENPOINT_CLASS}`, classroumRoute);
+app.use(`${ENPOINT}/school-year-period/`, SchoolYearPeriodRoute);
+app.use(`${ENPOINT}/school-year-deadline/`, SchoolYearDeadlineRoute);
+app.use(`${ENPOINT}/classroom`, classroomRoute);
+// app.use('/', async (req, res) => {
+//   let client = getAtlasApp()
+//   const mongo = client.currentUser.mongoClient('mongodb-atlas');
+//   const collection = mongo.db('EducDB').collection('users');
+// })
 
 app.listen(PORT, async () => {
   await main();

@@ -104,4 +104,4 @@ dist
 .tern-port
 
 #my file ignore
-
+mongodb-realm/

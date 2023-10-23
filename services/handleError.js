@@ -23,6 +23,7 @@ module.exports.specificError = {
     DATA_REQUIRED: "données indispensable incorect",
     SCHOOL_NOT_FOUND: "etablissement non trouvé!",
     SCHOOL_YEAR_NOT_FOUND: "Année scolaire non trouvé",
+    CLASSROOM_NOT_FOUND: "classe non trouvé",
     ACTOR_NOT_FOUND: "acteur non trouvé!",
     SCHOOL_YEAR_PERIOD_NOT_FOUND: "période scolaire non trouvé!",
     SCHOOL_YEAR_DEADLINE_NOT_FOUND: "éheance scolaire non trouvé!",
