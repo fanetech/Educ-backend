@@ -66,11 +66,8 @@ module.exports.modify = async (id, data) => {
             }
         }
         // TODO: check if schoolId exist
-        console.log("data.schoolId =>", data.schoolId)
         if (data.schoolId) {
-            console.log("data.schoolId =>", data.schoolId)
             const school = await realmQuery.getOne(schoolSchema.name, data.schoolId);
-            console.log("school =>", school)
             if (!school) {
                 return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.SCHOOL_NOT_FOUND);
             }

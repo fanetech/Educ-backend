@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "watch": "nodemon server",
+    "start:dev": "nodemon server",
     "vercel-build": "echo hello"
   },
   "repository": {
