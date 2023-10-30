@@ -1,5 +1,5 @@
 const { getRealm } = require("../../config/realmConfig");
-const { STATUS_CODE, RETURN_STATUS } = require("../../services/constant");
+const { STATUS_CODE, RETURN_STATUS, SCHEMA_FIELD } = require("../../services/constant");
 const { customQuery } = require("../../services/customQuery");
 const handleError = require("../../services/handleError");
 const { realmQuery } = require("../../services/realmQuery");
@@ -79,7 +79,7 @@ module.exports.modify = async (id, data) => {
     try {
         if (data.schoolYearId) {
             const classroom = await realmQuery.getOne(classroomSchema.name, id)
-            const schoolYear = await realmQuery.updateSchemaArray(schoolYearSchema.name, classroom.schoolYearId, data.schoolYearId, "classroomIds", classroom._id  );
+            const schoolYear = await realmQuery.updateSchemaArray(schoolYearSchema.name, classroom?.schoolYearId, data.schoolYearId, "classroomIds", classroom?._id  );
             if (!schoolYear) {
                 return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.SCHOOL_YEAR_NOT_FOUND);
             }
@@ -109,6 +109,7 @@ module.exports.modify = async (id, data) => {
 module.exports.remove = async (id) => {
     try {
         const classroom = await realmQuery.deleteAndUpdateArray(classroomSchema.name, schoolYearSchema.name, 'classroomIds', 'schoolYearId', id, ['teacherIds', 'deadlineIds', 'fileIds', 'absenceIds', 'matterIds', 'pupilIds']);
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, classroom);
         if (!classroom) {
             throw new Error("schoolYear not deleted or not found");
         }
@@ -121,3 +122,20 @@ module.exports.remove = async (id) => {
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
     }
 }
+
+module.exports.getClassroomByField = async (data) => {
+    try {
+        const field = SCHEMA_FIELD[data.field]
+        if (!field) {
+            throw new Error("get_classroom_by_field field no found");
+        }
+        const datas = await realmQuery.getDataByCustomQuery(classroomSchema.name, field, utilsTools.convertRealmObjectId(data.value));
+        if (!datas) {
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND);
+        }
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, datas);
+    } catch (error) {
+        console.log("getClassroomByField_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+  }

@@ -3,6 +3,7 @@ const { STATUS_CODE, DIVISION, DIVISION_VALUE, SCHEMA_FIELD, RETURN_STATUS } = r
 const handleError = require("../../services/handleError");
 const { realmQuery } = require("../../services/realmQuery");
 const utilsTools = require("../../utils/utils.tools");
+const { classroomSchema } = require("../classroom/models/classroomModel");
 const { schoolYearDeadlineSchema } = require("../deadline/models/schoolYearDeadlineModel");
 const { schoolSchema } = require("../school/models/schoolModel");
 const { schoolYearPeriodSchema } = require("../schoolYearPeriod/models/schoolYearPeriodModel");
@@ -155,7 +156,7 @@ module.exports.getSchoolYearPeriods = async (id) => {
   try {
       const schoolYear = await realmQuery.getOne(schoolYearSchema.name, id);
       const periods = await realmQuery.getDataByCustomQuery(schoolYearPeriodSchema.name, "_id", schoolYear['periodIds']);
-      return handleError.errorConstructor(STATUS_CODE.SUCCESS, periods);
+      return handleError.errorConstructor(STATUS_CODE.SUCCESS, periods ?? []);
   } catch (error) {
       console.log("getSchoolYearPeriods_error =>", error)
       return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
@@ -165,10 +166,21 @@ module.exports.getSchoolYearPeriods = async (id) => {
 module.exports.getSchoolYearDeadlines = async (id) => {
   try {
       const schoolYear = await realmQuery.getOne(schoolYearSchema.name, id);
-      const deadlines = await realmQuery.getDataByCustomQuery(schoolYearDeadlineSchema.name, "_id", schoolYear.deadlineIds);
-      return handleError.errorConstructor(STATUS_CODE.SUCCESS, deadlines);
+      const deadlines = await realmQuery.getDataByCustomQuery(schoolYearDeadlineSchema.name, "_id", schoolYear.deadlineIds ?? []);
+      return handleError.errorConstructor(STATUS_CODE.SUCCESS, deadlines ?? []);
   } catch (error) {
       console.log("getSchoolYearDeadline_error =>", error)
+      return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+  }
+};
+
+module.exports.getSchoolYearClassroom = async (id) => {
+  try {
+      const schoolYear = await realmQuery.getOne(schoolYearSchema.name, id);
+      const classrooms = await realmQuery.getDataByCustomQuery(classroomSchema.name, "_id", schoolYear.classroomIds);
+      return handleError.errorConstructor(STATUS_CODE.SUCCESS, classrooms ?? []);
+  } catch (error) {
+      console.log("getSchoolYearClassroom_error =>", error)
       return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
   }
 };

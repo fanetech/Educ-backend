@@ -76,7 +76,7 @@ module.exports.getuserSchools = async (id) => {
             return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.GET_USER_BY_ID_NOT_FOUND);
         }
         const userSchools = await realmQuery.getDataByCustomQuery(userSchoolSchema.name, "_id", user.schoolIds);
-        return handleError.errorConstructor(STATUS_CODE.SUCCESS, userSchools);
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, userSchools ?? []);
     } catch (error) {
         console.log("school_getSchoolOfUser_error =>", error)
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);

@@ -4,7 +4,7 @@ const { getRealm } = require("../config/realmConfig");
 const { customQuery } = require("./customQuery");
 const handleError = require("../services/handleError");
 const { STATUS_CODE, RETURN_STATUS } = require("./constant");
-const { convertRealmObjectId } = require("../utils/utils.tools");
+const { convertRealmObjectId, isEmpty } = require("../utils/utils.tools");
 
 exports.realmQuery = {
     add: async (schema, data) => {
@@ -45,7 +45,7 @@ exports.realmQuery = {
     getWithQueryAndId: (schema, query, id) => {
         try {
             const realm = getRealm();
-            return realm.objects(schema).filtered(query, BSON.ObjectId(id));            
+            return realm.objects(schema).filtered(query, BSON.ObjectId(id));
         } catch (error) {
             console.log("getWithQueryAndId error => ", error);
             return 1;
@@ -90,11 +90,12 @@ exports.realmQuery = {
             return false;
         }
     },
-    deleteAndUpdateArray: (schemaToDelede, schemaToUpdate, fieldArray, fieldDelete, id, checkArrayField = []) => {
+    deleteAndUpdateArray: (schemaToDelede, schemaToUpdate, fieldArray, ObjectToDeleteField, id, checkArrayField = [], customObjectIdToDelete = false) => {
         try {
             const realm = getRealm();
-            const deleteData = realm.objectForPrimaryKey(schemaToDelede, new BSON.ObjectId(id));
-            const updateData = realm.objectForPrimaryKey(schemaToUpdate, new BSON.ObjectId(deleteData[fieldDelete]));
+            const deleteData = realm.objectForPrimaryKey(schemaToDelede, convertRealmObjectId(id));
+            let updateObjectId = customObjectIdToDelete ? convertRealmObjectId(ObjectToDeleteField) : deleteData[ObjectToDeleteField];
+            const updateData = realm.objectForPrimaryKey(schemaToUpdate, updateObjectId);
             if (!deleteData || !updateData) {
                 return false;
             }
@@ -118,6 +119,9 @@ exports.realmQuery = {
     },
     getDataByCustomQuery: async (schema, fieldQuery, value) => {
         try {
+            if (!value || value.length < 0) {
+                throw new Error("getDataByCustomQuery value is empty");
+            }
             const realm = getRealm();
             const handleValue = value?.length > 0 ? [...value] : [value]
             return await realm.objects(schema).filtered(`${fieldQuery} IN $0`, handleValue);
