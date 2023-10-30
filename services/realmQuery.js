@@ -43,8 +43,13 @@ exports.realmQuery = {
         return realm.objects(schema).filtered(query);
     },
     getWithQueryAndId: (schema, query, id) => {
-        const realm = getRealm();
-        return realm.objects(schema).filtered(query, BSON.ObjectId(id));
+        try {
+            const realm = getRealm();
+            return realm.objects(schema).filtered(query, BSON.ObjectId(id));            
+        } catch (error) {
+            console.log("getWithQueryAndId error => ", error);
+            return 1;
+        }
     },
     updateElseCreate: (schema, data) => {
         return realm.write(() => {

@@ -87,7 +87,7 @@ module.exports.modify = async (id, data) => {
         }
         if (data.name) {
             const classroom = await realmQuery.getWithQueryAndId(classroomSchema.name, customQuery.GET_ROW_BY_STRING_ATTRIBUTE_AND_ID('name', data.name, 'schoolYearId'), data.schoolYearId);
-            if (classroom.length > 0) {
+            if (!utilsTools.isEmpty(classroom)) {
                 return handleError.errorConstructor(
                     STATUS_CODE.DATA_EXIST,
                     null,
