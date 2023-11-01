@@ -22,7 +22,7 @@ const { getRealm } = require("./config/realmConfig");
 const { on } = require("nodemon");
 const { getAtlasApp } = require("./atlasAppService/getAtlasApp");
 require("dotenv").config({ path: "./config/.env" });
-require("./config/db");
+// require("./config/db");
 
 // Connection DB
 // connectDB()
