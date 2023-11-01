@@ -11,6 +11,7 @@ const { schoolYearPeriodSchema } = require('../modules/schoolYearPeriod/models/s
 const { schoolYearDeadlineSchema } = require('../modules/deadline/models/schoolYearDeadlineModel');
 const { classroomSchema } = require('../modules/classroom/models/classroomModel');
 const { classroomTeacherSchema } = require('../modules/classroomTeacher/models/classroomTeacherModel');
+const { classroomMatterSchema } = require('../modules/classroomMatter/models/classroomMatterModel');
 
 let app = getAtlasApp();
 let realm;
@@ -27,7 +28,7 @@ function getRealm() {
 const openRealm = async () => {
   try {
     realm = await Realm.open({
-      schema: [userSchema, userSchoolSchema, schoolSchema, schoolActorSchema, schoolYearSchema, schoolYearPeriodSchema, schoolYearDeadlineSchema, classroomSchema, classroomTeacherSchema],
+      schema: [userSchema, userSchoolSchema, schoolSchema, schoolActorSchema, schoolYearSchema, schoolYearPeriodSchema, schoolYearDeadlineSchema, classroomSchema, classroomTeacherSchema, classroomMatterSchema],
       // schemaVersion: 1,
       sync: {
         user: app.currentUser,
@@ -37,32 +38,34 @@ const openRealm = async () => {
         initialSubscriptions: {
           update: (subs, realm) => {
             subs.add(
-              realm.objects(userSchema.name),
-              { name: 'storeA' },
+              realm.objects(userSchema.name)
             );
             subs.add(
-              realm.objects(userSchoolSchema.name),
+              realm.objects(userSchoolSchema.name)
             );
             subs.add(
-              realm.objects(schoolActorSchema.name),
+              realm.objects(schoolActorSchema.name)
             );
             subs.add(
-              realm.objects(schoolSchema.name),
+              realm.objects(schoolSchema.name)
             );
             subs.add(
-              realm.objects(schoolYearSchema.name),
+              realm.objects(schoolYearSchema.name)
             );
             subs.add(
-              realm.objects(schoolYearPeriodSchema.name),
+              realm.objects(schoolYearPeriodSchema.name)
             );
             subs.add(
-              realm.objects(schoolYearDeadlineSchema.name),
+              realm.objects(schoolYearDeadlineSchema.name)
             );
             subs.add(
-              realm.objects(classroomSchema.name),
+              realm.objects(classroomSchema.name)
             );
             subs.add(
-              realm.objects(classroomTeacherSchema.name),
+              realm.objects(classroomTeacherSchema.name)
+            );
+            subs.add(
+              realm.objects(classroomMatterSchema.name)
             );
           },
           rerunOnOpen: true,

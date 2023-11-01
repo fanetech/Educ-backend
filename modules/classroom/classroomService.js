@@ -109,7 +109,6 @@ module.exports.modify = async (id, data) => {
 module.exports.remove = async (id) => {
     try {
         const classroom = await realmQuery.deleteAndUpdateArray(classroomSchema.name, schoolYearSchema.name, 'classroomIds', 'schoolYearId', id, ['teacherIds', 'deadlineIds', 'fileIds', 'absenceIds', 'matterIds', 'pupilIds']);
-        return handleError.errorConstructor(STATUS_CODE.SUCCESS, classroom);
         if (!classroom) {
             throw new Error("schoolYear not deleted or not found");
         }

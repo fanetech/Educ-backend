@@ -10,6 +10,7 @@ exports.classroomSchema = {
     name: 'string',
     totalPupil: { type: 'int', default: 0 },
     price: 'int',
+    // todo add timetableIds
     teacherIds: 'objectId[]',
     deadlineIds: 'objectId[]',
     fileIds: 'objectId[]',

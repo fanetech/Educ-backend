@@ -33,6 +33,8 @@ module.exports.SCHEMA_FIELD = {
     user: "userId",
     school: "schoolId",
     schoolYear: "schoolYearId",
+    classroom: "classroomId",
+    teacher: "teacherId",
 }
 module.exports.RETURN_STATUS = {
     notEmpty:'NOT_EMPTY'
