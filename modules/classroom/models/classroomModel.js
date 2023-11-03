@@ -8,7 +8,7 @@ exports.classroomSchema = {
     __v: 'int?',
     schoolYearId: 'objectId',
     name: 'string',
-    totalPupil: { type: 'int', default: 0 },
+    totalPupils: { type: 'int', default: 0 },
     price: 'int',
     // todo add timetableIds
     teacherIds: 'objectId[]',

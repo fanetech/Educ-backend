@@ -74,6 +74,24 @@ exports.realmQuery = {
             return null;
         }
     },
+    updateSchemaArray: async (schema, objectUpdateSchema, oldObjectIdToUpdate, newObjectIdToUpdate, objectFieldToUpdate, id, data=null) => {
+        try {
+            const realm = getRealm();
+            const oldObjectToUpdate = realm.objectForPrimaryKey(objectUpdateSchema, convertRealmObjectId(oldObjectIdToUpdate));
+            const newObjectToPush = realm.objectForPrimaryKey(objectUpdateSchema, convertRealmObjectId(newObjectIdToUpdate));
+            let dataToSend;
+            realm.write(() => {
+                const index = oldObjectToUpdate[objectFieldToUpdate].indexOf(id);
+                if (index !== -1) oldObjectToUpdate[objectFieldToUpdate].splice(index, 1);
+                newObjectToPush[objectFieldToUpdate].push(id);
+                dataToSend = realm.create(schema, { _id: id, ...data }, "modified");
+            }, "modified");
+            return dataToSend;
+        } catch (error) {
+            console.log("realmQuery.getDataByCustomQuery error => ", error);
+            return false;
+        }
+    },
     delete: (schema, id) => {
         try {
             const realm = getRealm();
@@ -90,26 +108,26 @@ exports.realmQuery = {
             return false;
         }
     },
-    deleteAndUpdateArray: (schemaToDelede, schemaToUpdate, fieldArray, ObjectToDeleteField, id, checkArrayField = [], customObjectIdToDelete = false) => {
+    deleteAndUpdateArray: (schema, schemaToUpdate, updateArrayField, arrayFieldToInitObject, id, checkArrayField = [], customObjectIdToDelete = false) => {
         try {
             const realm = getRealm();
-            const deleteData = realm.objectForPrimaryKey(schemaToDelede, convertRealmObjectId(id));
-            let updateObjectId = customObjectIdToDelete ? convertRealmObjectId(ObjectToDeleteField) : deleteData[ObjectToDeleteField];
+            const data = realm.objectForPrimaryKey(schema, convertRealmObjectId(id));
+            let updateObjectId = customObjectIdToDelete ? convertRealmObjectId(arrayFieldToInitObject) : data[arrayFieldToInitObject];
             const updateData = realm.objectForPrimaryKey(schemaToUpdate, updateObjectId);
-            if (!deleteData || !updateData) {
+            if (!data || !updateData) {
                 return false;
             }
             if (checkArrayField.length > 0) {
                 for (const field of checkArrayField) {
-                    if (deleteData[field]?.length > 0) {
+                    if (data[field]?.length > 0) {
                         return RETURN_STATUS.notEmpty;
                     }
                 }
             }
             realm.write(() => {
-                const index = updateData[fieldArray].indexOf(deleteData._id);
-                if (index !== -1) updateData[fieldArray].splice(index, 1);
-                realm.delete(deleteData);
+                const index = updateData[updateArrayField].indexOf(data._id);
+                if (index !== -1) updateData[updateArrayField].splice(index, 1);
+                realm.delete(data);
             });
             return true;
         } catch (error) {
@@ -128,22 +146,6 @@ exports.realmQuery = {
         } catch (error) {
             console.log("realmQuery.getDataByCustomQuery error => ", error);
             return null;
-        }
-    },
-    updateSchemaArray: async (schema, updateObjectId, pushObjectId, fieldArray, classroomId) => {
-        try {
-            const realm = getRealm();
-            const objectToUpdate = realm.objectForPrimaryKey(schema, convertRealmObjectId(updateObjectId));
-            const objectToPush = realm.objectForPrimaryKey(schema, convertRealmObjectId(pushObjectId));
-            realm.write(() => {
-                const index = objectToUpdate[fieldArray].indexOf(classroomId);
-                if (index !== -1) objectToUpdate[fieldArray].splice(index, 1);
-                objectToPush[fieldArray].push(classroomId);
-            }, "modified");
-            return true;
-        } catch (error) {
-            console.log("realmQuery.getDataByCustomQuery error => ", error);
-            return false;
         }
     }
 }

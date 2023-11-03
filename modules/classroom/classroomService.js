@@ -4,8 +4,19 @@ const { customQuery } = require("../../services/customQuery");
 const handleError = require("../../services/handleError");
 const { realmQuery } = require("../../services/realmQuery");
 const utilsTools = require("../../utils/utils.tools");
+const { pupilSchema } = require("../pupils/models/pupil.model");
 const { schoolYearSchema } = require("../schoolYear/models/schoolYearModel");
 const { classroomSchema } = require("./models/classroomModel");
+
+module.exports.handleAddClassroom = (data, schoolYear) => {
+    let classroomCreated;
+    const realm = getRealm();
+    realm.write(() => {
+        classroomCreated = realm.create(classroomSchema.name, data);
+        schoolYear.classroomIds.push(classroomCreated._id);
+    });
+    return classroomCreated
+}
 
 module.exports.create = async (data) => {
     try {
@@ -41,16 +52,6 @@ module.exports.create = async (data) => {
     }
 }
 
-module.exports.handleAddClassroom = (data, schoolYear) => {
-    let classroomCreated;
-    const realm = getRealm();
-    realm.write(() => {
-        classroomCreated = realm.create(classroomSchema.name, data);
-        schoolYear.classroomIds.push(classroomCreated._id);
-    });
-    return classroomCreated
-}
-
 module.exports.getOne = async (id) => {
     try {
         const classroom = await realmQuery.getOne(classroomSchema.name, id);
@@ -76,14 +77,6 @@ module.exports.getAll = async () => {
 
 module.exports.modify = async (id, data) => {
     try {
-        if (data.schoolYearId) {
-            const classroom = await realmQuery.getOne(classroomSchema.name, id)
-            const schoolYear = await realmQuery.updateSchemaArray(schoolYearSchema.name, classroom?.schoolYearId, data.schoolYearId, "classroomIds", classroom?._id  );
-            if (!schoolYear) {
-                return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.SCHOOL_YEAR_NOT_FOUND);
-            }
-            data.schoolYearId = utilsTools.convertRealmObjectId(data.schoolYearId);
-        }
         if (data.name) {
             const classroom = await realmQuery.getWithQueryAndId(classroomSchema.name, customQuery.GET_ROW_BY_STRING_ATTRIBUTE_AND_ID('name', data.name, 'schoolYearId'), data.schoolYearId);
             if (!utilsTools.isEmpty(classroom)) {
@@ -93,6 +86,14 @@ module.exports.modify = async (id, data) => {
                     "nom de l'établissement"
                 );
             }
+        }
+        if (data.schoolYearId) {
+            const classroom = await realmQuery.getOne(classroomSchema.name, id)
+            const classroomUpdated = await realmQuery.updateSchemaArray(classroomSchema.name, schoolYearSchema.name, classroom?.schoolYearId, data.schoolYearId, "classroomIds", classroom?._id,  {...data, schoolYearId: utilsTools.convertRealmObjectId(data.schoolYearId)}  );
+            if (!classroomUpdated) {
+                return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.NOT_UPDATE);
+            }
+            return handleError.errorConstructor(STATUS_CODE.SUCCESS, classroomUpdated);
         }
         const classroomUpdate = await realmQuery.upadte(classroomSchema.name, id, data);
         if (!classroomUpdate) {
@@ -170,3 +171,14 @@ module.exports.addClassroomDeadline = async (data, classroomId) => {
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
     }
 }
+
+module.exports.getPupilsByClassroomId = async (id) => {
+    try {
+        const classroom = await realmQuery.getOne(classroomSchema.name, id);
+        const pupils = await realmQuery.getDataByCustomQuery(pupilSchema.name, "_id", classroom.pupilIds ?? []);
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, pupils ?? []);
+    } catch (error) {
+        console.log("school_getPupilsByClassroomId_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+};

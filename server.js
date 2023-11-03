@@ -14,6 +14,7 @@ const SchoolYearDeadlineRoute = require("./modules/deadline/schoolYearDeadlineRo
 const classroomRoute = require("./modules/classroom/classroomRouter");
 const classroomTeacherRoute = require("./modules/classroomTeacher/classroomTeacherRouter");
 const classroomMatterRoute = require("./modules/classroomMatter/classroomMatterRouter");
+const pupilRoute = require("./modules/pupils/pupil.router");
 
 const main = require("./main");
 const { realmQuery } = require("./services/realmQuery");
@@ -60,6 +61,7 @@ app.use(`${ENPOINT}/school-year-deadline/`, SchoolYearDeadlineRoute);
 app.use(`${ENPOINT}/classroom`, classroomRoute);
 app.use(`${ENPOINT}/classroom-teacher`, classroomTeacherRoute);
 app.use(`${ENPOINT}/classroom-matter`, classroomMatterRoute);
+app.use(`${ENPOINT}/classroom-pupil`, pupilRoute);
 // app.use('/', async (req, res) => {
 //   let client = getAtlasApp()
 //   const mongo = client.currentUser.mongoClient('mongodb-atlas');
