@@ -12,13 +12,24 @@ exports.classroomSchema = {
     price: 'int',
     // todo add timetableIds
     teacherIds: 'objectId[]',
-    deadlineIds: 'objectId[]',
+    deadlines: 'classroomDeadline[]',
     fileIds: 'objectId[]',
     absenceIds: 'objectId[]',
     matterIds: 'objectId[]',
     pupilIds: 'objectId[]',
     createdAt: { type: 'date', default: new Date() },
     updatedAt: { type: 'date', default: new Date() },
+  },
+  primaryKey: '_id',
+};
+
+exports.classroomDeadlineSchema = {
+  name: 'classroomDeadline',
+  properties: {
+    _id: { type: 'objectId', default: () => Realm.BSON.ObjectId() },
+    name: 'string?',
+    price: 'int?',
+    classroomId: 'objectId?',
   },
   primaryKey: '_id',
 };

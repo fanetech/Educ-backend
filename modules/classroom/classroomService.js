@@ -6,7 +6,6 @@ const { realmQuery } = require("../../services/realmQuery");
 const utilsTools = require("../../utils/utils.tools");
 const { schoolYearSchema } = require("../schoolYear/models/schoolYearModel");
 const { classroomSchema } = require("./models/classroomModel");
-const { BSON } = require('realm');
 
 module.exports.create = async (data) => {
     try {
@@ -138,3 +137,36 @@ module.exports.getClassroomByField = async (data) => {
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
     }
   }
+
+module.exports.addClassroomDeadline = async (data, classroomId) => {
+    try {
+        const { price, name } = data;
+        if(!classroomId || !price || !name) {
+            return handleError.errorConstructor(STATUS_CODE.NOT_DATA);
+        }
+        const classroom = await realmQuery.getOne(classroomSchema.name, classroomId);
+        if (!classroom) {
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.CLASSROOM_NOT_FOUND);
+        }
+        let currentDeadlinePrice = 0;
+        for (const deadline of classroom.deadlines) {
+            currentDeadlinePrice += deadline.price;
+        }
+        if(currentDeadlinePrice + price > classroom.price) {
+            return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR, null, handleError.specificError.PRICE_LIMIT);
+        }
+        const classroomDeadline = {
+            price: price,
+            name,
+            classroomId: classroom._id
+        }
+        const realm = getRealm();
+        realm.write(() => {
+            classroom.deadlines.push(classroomDeadline);
+        });
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, classroomDeadline);
+    } catch (error) {
+        console.log("addClassroomDeadline_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+}

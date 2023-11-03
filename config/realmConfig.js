@@ -9,7 +9,7 @@ const { schoolActorSchema } = require('../modules/schoolActor/models/schoolActor
 const { schoolYearSchema } = require('../modules/schoolYear/models/schoolYearModel');
 const { schoolYearPeriodSchema } = require('../modules/schoolYearPeriod/models/schoolYearPeriodModel');
 const { schoolYearDeadlineSchema } = require('../modules/deadline/models/schoolYearDeadlineModel');
-const { classroomSchema } = require('../modules/classroom/models/classroomModel');
+const { classroomSchema, classroomDeadlineSchema } = require('../modules/classroom/models/classroomModel');
 const { classroomTeacherSchema } = require('../modules/classroomTeacher/models/classroomTeacherModel');
 const { classroomMatterSchema } = require('../modules/classroomMatter/models/classroomMatterModel');
 
@@ -28,7 +28,7 @@ function getRealm() {
 const openRealm = async () => {
   try {
     realm = await Realm.open({
-      schema: [userSchema, userSchoolSchema, schoolSchema, schoolActorSchema, schoolYearSchema, schoolYearPeriodSchema, schoolYearDeadlineSchema, classroomSchema, classroomTeacherSchema, classroomMatterSchema],
+      schema: [userSchema, userSchoolSchema, schoolSchema, schoolActorSchema, schoolYearSchema, schoolYearPeriodSchema, schoolYearDeadlineSchema, classroomSchema, classroomTeacherSchema, classroomMatterSchema, classroomDeadlineSchema],
       // schemaVersion: 1,
       sync: {
         user: app.currentUser,
@@ -66,6 +66,9 @@ const openRealm = async () => {
             );
             subs.add(
               realm.objects(classroomMatterSchema.name)
+            );
+            subs.add(
+              realm.objects(classroomDeadlineSchema.name)
             );
           },
           rerunOnOpen: true,

@@ -30,6 +30,8 @@ module.exports.specificError = {
     SCHOOL_YEAR_PERIOD_NDIVISION_ERROR: "nDivision ne doit pas être supérieur au nDivision de l'année scolaire!",
     FIELD_NOT_EMPTY: "cette action nécessite la suppression de certaines données!",
     TEACHER_NOT_FOUND: "enseignant non trouvé!",
+    DEADLINE_NOT_FOUND: "échéance non trouvé!",
+    PRICE_LIMIT: "le prix ne doit pas être supérieur au prix de la classe!",
 }
 
 module.exports.errorConstructor = (code, data, message) => {
