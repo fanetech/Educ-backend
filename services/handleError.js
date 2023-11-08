@@ -33,7 +33,8 @@ module.exports.specificError = {
     DEADLINE_NOT_FOUND: "échéance non trouvé!",
     PRICE_LIMIT: "le prix ne doit pas être supérieur au prix de la classe!",
     NOT_UPDATE: "mise à jour non effectuer!",
-    PIPUL_NOT_FOUND: "élève non trouvé!",
+    PUPIL_NOT_FOUND: "élève non trouvé!",
+    PUPIL_PERIOD_NOT_FOUND: "période de l'élève non trouvé!",
 }
 
 module.exports.errorConstructor = (code, data, message) => {

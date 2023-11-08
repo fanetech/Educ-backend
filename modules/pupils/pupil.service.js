@@ -4,6 +4,7 @@ const handleError = require("../../services/handleError");
 const { realmQuery } = require("../../services/realmQuery");
 const utilsTools = require("../../utils/utils.tools");
 const { classroomSchema } = require("../classroom/models/classroomModel");
+const { pupilPeriodSchema } = require("../pupilPeriod/models/pupilPeriod.model");
 const { pupilSchema } = require("./models/pupil.model");
 
 module.exports.handleAddPupil = (data, classroom) => {
@@ -90,7 +91,7 @@ module.exports.remove = async (id) => {
     try {
         const pupil = await realmQuery.getOne(pupilSchema.name, id);
         if (!pupil) {
-            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.PIPUL_NOT_FOUND);
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.PUPIL_NOT_FOUND);
         }
         const classroom = await realmQuery.getOne(classroomSchema.name, pupil.classroomId);
         const data = await realmQuery.deleteAndUpdateArray(pupilSchema.name, classroomSchema.name, 'pupilIds', 'classroomId', id, ['periodIds']);
@@ -126,4 +127,16 @@ module.exports.getPupilByField = async (data) => {
         console.log("getPupilByField_error =>", error)
         return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
     }
-  }
+}
+
+module.exports.getPupilPeriods = async (id) => {
+    try {
+        const pupil = await realmQuery.getOne(pupilSchema.name, id);
+        const periods = await realmQuery.getDataByCustomQuery(pupilPeriodSchema.name, "_id", pupil.periodIds);
+        return handleError.errorConstructor(STATUS_CODE.SUCCESS, periods ?? []);
+    } catch (error) {
+        console.log("getPupilPeriods_error =>", error)
+        return handleError.errorConstructor(STATUS_CODE.UNEXPECTED_ERROR);
+    }
+  };
+  
