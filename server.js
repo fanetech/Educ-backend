@@ -16,13 +16,9 @@ const classroomTeacherRoute = require("./modules/classroomTeacher/classroomTeach
 const classroomMatterRoute = require("./modules/classroomMatter/classroomMatterRouter");
 const pupilRoute = require("./modules/pupils/pupil.router");
 const pupilPeriodRoute = require("./modules/pupilPeriod/pupilPeriod.router");
+const noteRoute = require("./modules/note/note.router");
 
 const main = require("./main");
-const { realmQuery } = require("./services/realmQuery");
-const { userSchoolSchema, userSchema } = require("./modules/user/model/userModel");
-const { getRealm } = require("./config/realmConfig");
-const { on } = require("nodemon");
-const { getAtlasApp } = require("./atlasAppService/getAtlasApp");
 require("dotenv").config({ path: "./config/.env" });
 // require("./config/db");
 
@@ -64,11 +60,7 @@ app.use(`${ENPOINT}/classroom-teacher`, classroomTeacherRoute);
 app.use(`${ENPOINT}/classroom-matter`, classroomMatterRoute);
 app.use(`${ENPOINT}/classroom-pupil`, pupilRoute);
 app.use(`${ENPOINT}/pupil-period`, pupilPeriodRoute);
-// app.use('/', async (req, res) => {
-//   let client = getAtlasApp()
-//   const mongo = client.currentUser.mongoClient('mongodb-atlas');
-//   const collection = mongo.db('EducDB').collection('users');
-// })
+app.use(`${ENPOINT}/pupil-note`, noteRoute);
 
 app.listen(PORT, async () => {
   await main();
