@@ -3,37 +3,38 @@ const handleError = require("../../services/handleError");
 const { STATUS_CODE, RETURN_STATUS } = require("../../services/constant");
 const { getRealm } = require("../../config/realmConfig");
 const { pupilSchema } = require("../pupils/models/pupil.model");
-const { pupilPeriodSchema } = require("./models/pupilPeriod.model");
+const { classroomPeriodSchema } = require("./models/classroomPeriod.model");
 const { schoolYearPeriodSchema } = require("../schoolYearPeriod/models/schoolYearPeriodModel");
+const { classroomSchema } = require("../classroom/models/classroomModel");
 
-module.exports.handleAddPupilPeroid = (data, pupil) => {
+module.exports.handleAddPupilPeroid = (data, classroom) => {
     let periodCreated;
     const realm = getRealm();
     realm.write(() => {
-        periodCreated = realm.create(pupilPeriodSchema.name, data);
-        pupil.periodIds.push(periodCreated._id);
+        periodCreated = realm.create(classroomPeriodSchema.name, data);
+        classroom.periodIds.push(periodCreated._id);
     });
     return periodCreated
 }
 
 module.exports.create = async (data) => {
     try {
-        const { pupilId, schoolYearPeriodId } = data;
-        if (!pupilId || !schoolYearPeriodId) {
+        const { classroomId, schoolYearPeriodId } = data;
+        if (!classroomId || !schoolYearPeriodId) {
             return handleError.errorConstructor(STATUS_CODE.NOT_DATA);
         }
-        const pupil = await realmQuery.getOne(pupilSchema.name, pupilId);
-        if (!pupil) {
-            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.PUPIL_NOT_FOUND);
+        const classroom = await realmQuery.getOne(classroomSchema.name, classroomId);
+        if (!classroom) {
+            return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.CLASSROOM_NOT_FOUND);
         }
         const schoolYearPeriod = await realmQuery.getOne(schoolYearPeriodSchema.name, schoolYearPeriodId);
         if (!schoolYearPeriod) {
             return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.SCHOOL_YEAR_NOT_FOUND);
         }
         let periodCreated = this.handleAddPupilPeroid({
-            pupilId: pupil._id,
+            classroomId: classroom._id,
             schoolYearPeriodId: schoolYearPeriod._id,
-        }, pupil)
+        }, classroom)
         if (!periodCreated) {
             throw new Error("pupilPeriod_create_error");
         }
@@ -46,7 +47,7 @@ module.exports.create = async (data) => {
 
 module.exports.getOne = async (id) => {
     try {
-        const period = await realmQuery.getOne(pupilPeriodSchema.name, id);
+        const period = await realmQuery.getOne(classroomPeriodSchema.name, id);
         if (!period) {
             return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.PUPIL_PERIOD_NOT_FOUND);
         }
@@ -59,7 +60,7 @@ module.exports.getOne = async (id) => {
 
 module.exports.getAll = async () => {
     try {
-        const periods = await realmQuery.getAll(pupilPeriodSchema.name);
+        const periods = await realmQuery.getAll(classroomPeriodSchema.name);
         return handleError.errorConstructor(STATUS_CODE.SUCCESS, periods);
     } catch (error) {
         console.log("pupilPeriod_getAll_error =>", error)
@@ -71,8 +72,8 @@ module.exports.getAll = async () => {
 // module.exports.modify = async (id, data) => {
 //     try {
 //         if (data.pupilId) {
-//             const pupilPeriod = await realmQuery.getOne(pupilPeriodSchema.name, id);
-//             const pupilPeriodUpdated = await realmQuery.updateSchemaArray(pupilPeriodSchema.name, pupilSchema.name, pupilPeriod?.pupilId, data.pupilId, "periodIds", pupilPeriod?._id, { ...data, pupilId: utilsTools.convertRealmObjectId(data.classroomId) });
+//             const pupilPeriod = await realmQuery.getOne(classroomPeriodSchema.name, id);
+//             const pupilPeriodUpdated = await realmQuery.updateSchemaArray(classroomPeriodSchema.name, pupilSchema.name, pupilPeriod?.pupilId, data.pupilId, "periodIds", pupilPeriod?._id, { ...data, pupilId: utilsTools.convertRealmObjectId(data.classroomId) });
 //             if (!pupilPeriodUpdated) {
 //                 return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.NOT_UPDATE);
 //             }
@@ -91,7 +92,7 @@ module.exports.getAll = async () => {
 
 module.exports.remove = async (id) => {
     try {
-      const period = await realmQuery.deleteAndUpdateArray( pupilPeriodSchema.name, pupilSchema.name, 'periodIds', 'pupilId', id, ['periodIds']);
+      const period = await realmQuery.deleteAndUpdateArray( classroomPeriodSchema.name, classroomSchema.name, 'periodIds', 'classroomId', id, ['periodIds']);
       if (!period) {
         throw new Error("pupilPeriod not deleted or not found");
       }    

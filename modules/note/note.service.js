@@ -5,7 +5,7 @@ const { getRealm } = require("../../config/realmConfig");
 const { pupilSchema } = require("../pupils/models/pupil.model");
 const { classroomMatterSchema } = require("../classroomMatter/models/classroomMatterModel");
 const { noteSchema } = require("./models/note.model");
-const { pupilPeriodSchema } = require("../pupilPeriod/models/pupilPeriod.model");
+const { pupilPeriodSchema } = require("../pupilPeriod/models/classroomPeriod.model");
 const { convertRealmObjectId } = require("../../utils/utils.tools");
 
 module.exports.handleAddNote = (data, pupilPeriod) => {

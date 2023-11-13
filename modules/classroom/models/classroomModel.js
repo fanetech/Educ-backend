@@ -17,6 +17,7 @@ exports.classroomSchema = {
     absenceIds: 'objectId[]',
     matterIds: 'objectId[]',
     pupilIds: 'objectId[]',
+    periodIds: 'objectId[]',
     createdAt: { type: 'date', default: new Date() },
     updatedAt: { type: 'date', default: new Date() },
   },

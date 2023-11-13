@@ -1,13 +1,13 @@
 
 const Realm = require('realm');
 
-exports.pupilPeriodSchema = {
-  name: 'pupilPeriod',
+exports.classroomPeriodSchema = {
+  name: 'classroomPeriod',
   properties: {
     deviceId: 'objectId?',
     _id: { type: 'objectId', default: () => Realm.BSON.ObjectId() },
     __v: 'int?',
-    pupilId: 'objectId',
+    classroomId: 'objectId',
     schoolYearPeriodId: 'objectId',
     noteIds: 'objectId[]',
     createdAt: { type: 'date', default: new Date() },

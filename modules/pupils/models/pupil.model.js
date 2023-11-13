@@ -19,7 +19,6 @@ exports.pupilSchema = {
     TotalRank: 'int?',
     complement: { type: 'bool', default: false },
     role: { type: 'string', default: 'none' },
-    periodIds: 'objectId[]',
     createdAt: { type: 'date', default: new Date() },
     updatedAt: { type: 'date', default: new Date() },
   },

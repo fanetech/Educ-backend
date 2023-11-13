@@ -4,7 +4,7 @@ const handleError = require("../../services/handleError");
 const { realmQuery } = require("../../services/realmQuery");
 const utilsTools = require("../../utils/utils.tools");
 const { classroomSchema } = require("../classroom/models/classroomModel");
-const { pupilPeriodSchema } = require("../pupilPeriod/models/pupilPeriod.model");
+const { pupilPeriodSchema } = require("../pupilPeriod/models/classroomPeriod.model");
 const { pupilSchema } = require("./models/pupil.model");
 
 module.exports.handleAddPupil = (data, classroom) => {

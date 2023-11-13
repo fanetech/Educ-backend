@@ -15,7 +15,7 @@ const classroomRoute = require("./modules/classroom/classroomRouter");
 const classroomTeacherRoute = require("./modules/classroomTeacher/classroomTeacherRouter");
 const classroomMatterRoute = require("./modules/classroomMatter/classroomMatterRouter");
 const pupilRoute = require("./modules/pupils/pupil.router");
-const pupilPeriodRoute = require("./modules/pupilPeriod/pupilPeriod.router");
+const classroomPeriodRoute = require("./modules/pupilPeriod/classroomPeriod.router");
 const noteRoute = require("./modules/note/note.router");
 
 const main = require("./main");
@@ -59,7 +59,7 @@ app.use(`${ENPOINT}/classroom`, classroomRoute);
 app.use(`${ENPOINT}/classroom-teacher`, classroomTeacherRoute);
 app.use(`${ENPOINT}/classroom-matter`, classroomMatterRoute);
 app.use(`${ENPOINT}/classroom-pupil`, pupilRoute);
-app.use(`${ENPOINT}/pupil-period`, pupilPeriodRoute);
+app.use(`${ENPOINT}/pupil-period`, classroomPeriodRoute);
 app.use(`${ENPOINT}/pupil-note`, noteRoute);
 
 app.listen(PORT, async () => {
