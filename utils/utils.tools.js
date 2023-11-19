@@ -57,3 +57,15 @@ module.exports.save = async (doc, sendDoc) => {
 module.exports.convertRealmObjectId = (id) => {
   return BSON.ObjectId(id)
 }
+
+module.exports.getAllIdInArray = (array, field) => {
+  let ids = [];
+  if(this.isEmpty(array)){
+    return null;
+  }
+  for (const object of array) {
+    ids.push(object[field]); 
+  }
+  return ids;
+    
+}

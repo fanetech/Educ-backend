@@ -33,7 +33,7 @@ module.exports.create = async (data) => {
             schoolCreated = realm.create(schoolSchema.name, {
                 schoolName,
                 slogan,
-                founderId: new BSON.ObjectId(founderId),
+                founderId: BSON.ObjectId(founderId),
             });
             actorCreated = realm.create(schoolActorSchema.name, {
                 schoolId: schoolCreated._id,

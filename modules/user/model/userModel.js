@@ -1,4 +1,4 @@
-const Realm = require("realm");
+const Realm = require('realm');
 
 exports.userSchema = {
   name: 'users',
