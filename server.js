@@ -17,9 +17,10 @@ const classroomMatterRoute = require("./modules/classroomMatter/classroomMatterR
 const pupilRoute = require("./modules/pupils/pupil.router");
 const classroomPeriodRoute = require("./modules/pupilPeriod/classroomPeriod.router");
 const noteRoute = require("./modules/note/note.router");
+const pupilAbsenceRoute = require("./modules/absence/absence.router");
 
 const main = require("./main");
-require("dotenv").config({ path: "./config/.env" });
+require("dotenv").config({ path: "./.env" });
 // require("./config/db");
 
 // Connection DB
@@ -61,6 +62,7 @@ app.use(`${ENPOINT}/classroom-matter`, classroomMatterRoute);
 app.use(`${ENPOINT}/classroom-pupil`, pupilRoute);
 app.use(`${ENPOINT}/pupil-period`, classroomPeriodRoute);
 app.use(`${ENPOINT}/pupil-note`, noteRoute);
+app.use(`${ENPOINT}/pupil-absence`, pupilAbsenceRoute);
 
 app.listen(PORT, async () => {
   await main();

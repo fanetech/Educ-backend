@@ -15,6 +15,7 @@ const { classroomMatterSchema } = require('../modules/classroomMatter/models/cla
 const { pupilSchema } = require('../modules/pupils/models/pupil.model');
 const { noteSchema } = require('../modules/note/models/note.model');
 const { classroomPeriodSchema } = require('../modules/pupilPeriod/models/classroomPeriod.model');
+const { pupilAbsenceSchema } = require('../modules/absence/models/absence.model');
 
 let app = getAtlasApp();
 let realm;
@@ -31,7 +32,7 @@ function getRealm() {
 const openRealm = async () => {
   try {
     realm = await Realm.open({
-      schema: [userSchema, userSchoolSchema, schoolSchema, schoolActorSchema, schoolYearSchema, schoolYearPeriodSchema, schoolYearDeadlineSchema, classroomSchema, classroomTeacherSchema, classroomMatterSchema, classroomDeadlineSchema, pupilSchema, classroomPeriodSchema, noteSchema],
+      schema: [userSchema, userSchoolSchema, schoolSchema, schoolActorSchema, schoolYearSchema, schoolYearPeriodSchema, schoolYearDeadlineSchema, classroomSchema, classroomTeacherSchema, classroomMatterSchema, classroomDeadlineSchema, pupilSchema, classroomPeriodSchema, noteSchema, pupilAbsenceSchema],
       // schemaVersion: 1,
       sync: {
         user: app.currentUser,
@@ -81,6 +82,9 @@ const openRealm = async () => {
             );
             subs.add(
               realm.objects(noteSchema.name)
+            );
+            subs.add(
+              realm.objects(pupilAbsenceSchema.name)
             );
           },
           rerunOnOpen: true,

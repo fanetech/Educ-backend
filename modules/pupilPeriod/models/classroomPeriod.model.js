@@ -10,6 +10,7 @@ exports.classroomPeriodSchema = {
     classroomId: 'objectId',
     schoolYearPeriodId: 'objectId',
     noteIds: 'objectId[]',
+    absenceIds: 'objectId[]',
     createdAt: { type: 'date', default: new Date() },
     updatedAt: { type: 'date', default: new Date() },
   },
