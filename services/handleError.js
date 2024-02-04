@@ -35,7 +35,8 @@ module.exports.specificError = {
     NOT_UPDATE: "mise à jour non effectuer!",
     PUPIL_NOT_FOUND: "élève non trouvé!",
     PUPIL_PERIOD_NOT_FOUND: "période de l'élève non trouvé!",
-    PUPIL_NOTE_NOT_FOUND: "note de l'élève non trouvé!"
+    PUPIL_NOTE_NOT_FOUND: "note de l'élève non trouvé!",
+    ROLE_NOT_EXIST: "role non existant!",
 }
 
 module.exports.errorConstructor = (code, data, message) => {

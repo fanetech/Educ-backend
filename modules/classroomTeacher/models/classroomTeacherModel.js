@@ -7,6 +7,7 @@ exports.classroomTeacherSchema = {
     __v: 'int?',
     actorId: 'objectId',
     isPrincipal: { type: 'bool', default: false },
+    role: 'string',
     createdAt: { type: 'date', default: new Date() },
     updatedAt: { type: 'date', default: new Date() },
   },

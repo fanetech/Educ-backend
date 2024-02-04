@@ -76,6 +76,15 @@ module.exports.modify = async (id, data) => {
             }
             return handleError.errorConstructor(STATUS_CODE.SUCCESS, pupilUpdated);
         }
+        if(data.payed){
+            const pupil = await realmQuery.getOne(pupilSchema.name, id);
+            const classroom = await realmQuery.getOne(classroomSchema.name, pupil.classroomId);
+            const remain = classroom.price - (data.payed + pupil.payed);
+            data.remainAmount = remain < 0 ? 0 : remain;
+            data.payed = data.payed > classroom.price ? classroom.price : data.payed + pupil.payed;
+            // data.payed = 0;
+            // data.remainAmount = 0
+        }
         const classroomUpdate = await realmQuery.upadte(pupilSchema.name, id, data);
         if (!classroomUpdate) {
             return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.CLASSROOM_NOT_FOUND);

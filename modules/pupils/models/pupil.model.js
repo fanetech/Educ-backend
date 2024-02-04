@@ -14,6 +14,7 @@ exports.pupilSchema = {
     oldSchool: 'string?',
     birthday: 'date?',
     payed: { type: 'int', default: 0 },
+    remainAmount: { type: 'int', default: 0 },
     sanction: { type: 'int', default: 0 },
     TotalAverage: 'int?',
     TotalRank: 'int?',
