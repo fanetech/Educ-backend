@@ -1,19 +1,16 @@
 const { getRealm } = require("../../config/realmConfig");
-const { STATUS_CODE, RETURN_STATUS, SCHEMA_FIELD } = require("../../services/constant");
-const { customQuery } = require("../../services/customQuery");
+const { STATUS_CODE, RETURN_STATUS, SCHEMA_FIELD, TEACHER_ROLE } = require("../../services/constant");
 const handleError = require("../../services/handleError");
 const { realmQuery } = require("../../services/realmQuery");
 const utilsTools = require("../../utils/utils.tools");
 const { schoolActorSchema } = require("../schoolActor/models/schoolActorModel");
-const { schoolYearSchema } = require("../schoolYear/models/schoolYearModel");
-const { BSON } = require('realm');
 const { classroomTeacherSchema } = require("./models/classroomTeacherModel");
 const { classroomSchema } = require("../classroom/models/classroomModel");
 
 module.exports.create = async (data) => {
     try {
-        const { actorId, classroomId } = data;
-        if (!actorId || !classroomId) {
+        const { actorId, classroomId, role } = data;
+        if (!actorId || !classroomId || !role) {
             return handleError.errorConstructor(STATUS_CODE.NOT_DATA);
         }
         const actor = await realmQuery.getOne(schoolActorSchema.name, actorId);
@@ -24,8 +21,13 @@ module.exports.create = async (data) => {
         if (!classroom) {
             return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.CLASSROOM_NOT_FOUND);
         }
+        const roleExist = TEACHER_ROLE.find(roleUsed => roleUsed === role);
+        if (!roleExist) {
+            return handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, handleError.specificError.ROLE_NOT_EXIST);
+        }
         let newTeacher = this.handleClassroomTeacherAdding({
             actorId: utilsTools.convertRealmObjectId(actorId),
+            role: roleExist
         }, classroom)
         if (!newTeacher) {
             throw new Error("classroom_create_error");
@@ -79,6 +81,12 @@ module.exports.modify = async (id, data) => {
             }
             data.actorId = utilsTools.convertRealmObjectId(data.actorId);
         }
+        if (data.role) {
+            const roleExist = TEACHER_ROLE.find(roleUsed => roleUsed === data.role);
+            if (!roleExist) {
+                return handleError.errorConstructor(STATUS_CODE.DATA_INCORRECT, null, handleError.specificError.ROLE_NOT_EXIST);
+            }
+        }
         const teacherUpdate = await realmQuery.upadte(classroomTeacherSchema.name, id, data);
         if (!teacherUpdate) {
             return handleError.errorConstructor(STATUS_CODE.NOT_FOUND, null, handleError.specificError.TEACHER_NOT_FOUND);
@@ -95,7 +103,7 @@ module.exports.remove = async (id, requireData) => {
         if (!requireData.classroomId) {
             return handleError.errorConstructor(STATUS_CODE.NOT_DATA);
         }
-        const data = await realmQuery.deleteAndUpdateArray(classroomTeacherSchema.name, classroomSchema.name, 'teacherIds' , requireData.classroomId, id, [], true);
+        const data = await realmQuery.deleteAndUpdateArray(classroomTeacherSchema.name, classroomSchema.name, 'teacherIds', requireData.classroomId, id, [], true);
         if (!data) {
             throw new Error("classroom teacher not deleted or not found");
         }
